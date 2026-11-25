@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -12,8 +12,6 @@
  */
 
 let _menu_bottom = {
-
-	SortScrollTimer: null,
 
 	btnSize: 42,
 
@@ -37,17 +35,17 @@ let _menu_bottom = {
 		hud.append(btnUp);
 		hud.append(hudWrapper)
 		hud.append(btnDown);
-
+		
 		// If the window size changes, recalculate
 		window.onresize = function(event) {
 			if (event.target == window) _menu_bottom.SetMenuWidth(true);
 		};
-
-		$('body').append(hud).promise().done(async function(){
+		
+		$('body').append(hud).promise().done(function(){
 
 			// Insert buttons
 			_menu.ListLinks(_menu_bottom.InsertMenuItem);
-			await _menu_bottom.CheckButtons();
+			_menu_bottom.CheckButtons();
 
 			// Determine the correct place for the menu
 			_menu_bottom.SetMenuWidth();
@@ -89,7 +87,7 @@ let _menu_bottom = {
 
 		if (reset) {
 			// Slider nach links resetten
-			$('#foe-helper-hud-slider').css({
+			$('#foe-helper-hud-slider').css({ 
 				left: 0
 			});
 
@@ -123,8 +121,8 @@ let _menu_bottom = {
 			window.onresize = function(){};
 			_menu.CallSelectedMenu('Box');
 			return;
-		}
-
+		} 
+			
 		// hat der Spieler eine Länge vorgebeben?
 		let MenuLength = localStorage.getItem('MenuLength');
 
@@ -140,15 +138,14 @@ let _menu_bottom = {
 		$('#foe-helper-hud-wrapper').width(_menu.HudWidth);
 		$('#foe-helper-hud-slider').width( ($("#foe-helper-hud-slider").children().length * _menu_bottom.btnSize));
 	},
-
+	
 
 	/**
 	 * Panel scrollbar machen
 	 *
 	 */
-	CheckButtons: async () => {
+	CheckButtons: () => {
 		let activeIdx = 0;
-		await ExistenceConfirmed(() => jQuery._data($('body').get(0), 'events').click != null && $('.hud-btn').length > 0);
 		$('.hud-btn').click(function () {
 			activeIdx = $(this).index('.hud-btn');
 		});
@@ -182,26 +179,6 @@ let _menu_bottom = {
 			$('[data-btn="' + id + '"]').hide();
 		});
 
-		// While dragging a menu item, hovering an active arrow for one second scrolls the bar
-		$('#foe-helper-hud')
-			.off('.menuSortScroll')
-			.on('mouseenter.menuSortScroll', '.hud-btn-left-active, .hud-btn-right-active', function () {
-				if (!$('#foe-helper-hud').hasClass('is--sorting')) return;
-
-				let $btn = $(this);
-
-				clearTimeout(_menu_bottom.SortScrollTimer);
-				_menu_bottom.SortScrollTimer = setTimeout(() => {
-					if (!$('#foe-helper-hud').hasClass('is--sorting')) return;
-
-					if ($btn.hasClass('hud-btn-left-active')) _menu_bottom.ClickButtonLeft();
-					else if ($btn.hasClass('hud-btn-right-active')) _menu_bottom.ClickButtonRight();
-				}, 1000);
-			})
-			.on('mouseleave.menuSortScroll', '.hud-btn-left, .hud-btn-right', function () {
-				clearTimeout(_menu_bottom.SortScrollTimer);
-			});
-
 		// Sortierfunktion der Menü-items
 		$('#foe-helper-hud-slider').sortable({
 			placeholder: 'menu-placeholder',
@@ -210,9 +187,35 @@ let _menu_bottom = {
 			start: function () {
 				$('#foe-helper-hud').addClass('is--sorting');
 			},
-			stop: function () {
-				clearTimeout(_menu_bottom.SortScrollTimer);
+			sort: function () {
 
+				$('.is--sorting .hud-btn-left-active').mouseenter(function (e) {
+					$('.hud-btn-left-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-left-active').hasClass('hasFocus')) {
+							_menu_bottom.ClickButtonLeft();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-left-active').removeClass('hasFocus');
+				});
+
+				$('.is--sorting .hud-btn-right-active').mouseenter(function (e) {
+					$('.is--sorting .hud-btn-right-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-right-active').hasClass('hasFocus')) {
+							_menu_bottom.ClickButtonRight();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-right-active').removeClass('hasFocus');
+				});
+			},
+			stop: function () {
 				// Sortierung zwischenspeichern
 				let storedItems = _menu.Items;
 				_menu.Items = [];
@@ -276,8 +279,8 @@ let _menu_bottom = {
 		$('.hud-btn-left').removeClass('hasFocus');
 
 		_menu.ActiveSlide--;
-
-		if (_menu.ActiveSlide == 1)
+		
+		if (_menu.ActiveSlide == 1) 
 			_menu.MenuScrollLeft = 0;
 		else
 			_menu.MenuScrollLeft += _menu.HudWidth;

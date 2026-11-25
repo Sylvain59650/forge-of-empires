@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -12,8 +12,6 @@
  */
 
 let _menu_right = {
-
-	SortScrollTimer: null,
 
 	/**
 	 *
@@ -36,10 +34,10 @@ let _menu_right = {
 			if (event.target == window) _menu_right.SetMenuHeight(true);
 		};
 
-		$('body').append(hud).ready(async function () {
+		$('body').append(hud).ready(function () {
 
 			_menu.ListLinks(_menu_right.InsertMenuItem);
-			await _menu_right.CheckButtons();
+			_menu_right.CheckButtons();
 
 			_menu_right.SetMenuHeight();
 
@@ -61,9 +59,11 @@ let _menu_right = {
 
 	/**
 	 * Collective function
+	 *
+	 * @param reset
 	 */
 	SetMenuHeight: (reset = true) => {
-		// calibrate height
+		// Höhe ermitteln und setzten
 		_menu_right.Prepare();
 
 		if (reset) {
@@ -77,10 +77,12 @@ let _menu_right = {
 
 			$('.hud-btn-up').removeClass('hud-btn-up-active');
 
-			if (_menu.SlideParts > 1)
+			if (_menu.SlideParts > 1) {
 				$('.hud-btn-down').addClass('hud-btn-down-active');
-			else // button not needed
-				$('.hud-btn-down').removeClass('hud-btn-down-active');
+			}
+			else { //Gesamtes Menü passt auf 1 Seite => Kein Scrollbutton nach unten
+				$('.hud-btn-down').removeClass('hud-btn-down-active');	
+			}
 		}
 	},
 
@@ -92,14 +94,14 @@ let _menu_right = {
 	Prepare: () => {
 		let MenuItemCount = $("#foe-helper-hud-slider").children().length;
 
-		_menu.HudCount = Math.floor((($(window).outerHeight() - 20) - $('#foe-helper-hud').offset().top) / 48);
+		_menu.HudCount = Math.floor((($(window).outerHeight() - 25) - $('#foe-helper-hud').offset().top) / 48);
 		_menu.HudCount = Math.min(_menu.HudCount, MenuItemCount);
 
 		if (_menu.HudCount <= 0) {
 			$('#foe-helper-hud').remove();
 			_menu.CallSelectedMenu('Box')
 		}
-
+			
 		// has a length been set manually?
 		let MenuLength = localStorage.getItem('MenuLength');
 
@@ -118,14 +120,14 @@ let _menu_right = {
 	/**
 	 * Make panel scrollable
 	 */
-	CheckButtons: async () => {
-		let activeIdx = 0;
+	CheckButtons: () => {
 
-		await ExistenceConfirmed(() => jQuery._data($('body').get(0), 'events').click != null && $('.hud-btn').length > 0);
+		let activeIdx = 0;
 
 		$('.hud-btn').click(function () {
 			activeIdx = $(this).index('.hud-btn');
 		});
+
 
 		if (jQuery._data($('body').get(0), 'events' ).click.filter((elem) => elem.selector == ".hud-btn-down-active").length == 0) {
 			// Klick auf Pfeil nach unten
@@ -155,37 +157,43 @@ let _menu_right = {
 			$('[data-btn="' + id + '"]').hide();
 		});
 
-		// While dragging a menu item, hovering an active arrow for one second scrolls the bar
-		$('#foe-helper-hud')
-			.off('.menuSortScroll')
-			.on('mouseenter.menuSortScroll', '.hud-btn-up-active, .hud-btn-down-active', function () {
-				if (!$('#foe-helper-hud').hasClass('is--sorting')) return;
-
-				let $btn = $(this);
-
-				clearTimeout(_menu_right.SortScrollTimer);
-				_menu_right.SortScrollTimer = setTimeout(() => {
-					if (!$('#foe-helper-hud').hasClass('is--sorting')) return;
-
-					if ($btn.hasClass('hud-btn-up-active')) _menu_right.ClickButtonUp();
-					else if ($btn.hasClass('hud-btn-down-active')) _menu_right.ClickButtonDown();
-				}, 1000);
-			})
-			.on('mouseleave.menuSortScroll', '.hud-btn-up, .hud-btn-down', function () {
-				clearTimeout(_menu_right.SortScrollTimer);
-			});
-
 		// Sortierfunktion der Menü-items
 		$('#foe-helper-hud-slider').sortable({
 			placeholder: 'menu-placeholder',
 			axis: 'y',
-			distance: 22,
+			distance: 15,
 			start: function () {
 				$('#foe-helper-hud').addClass('is--sorting');
 			},
-			stop: function () {
-				clearTimeout(_menu_right.SortScrollTimer);
+			sort: function () {
 
+				$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
+					$('.hud-btn-up-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
+							_menu_right.ClickButtonUp();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
+				});
+
+				$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
+					$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
+							_menu_right.ClickButtonDown();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
+				});
+			},
+			stop: function () {
 				_menu.Items = [];
 
 				$('.hud-btn').each(function () {
@@ -247,8 +255,8 @@ let _menu_right = {
 		$('.hud-btn-up').removeClass('hasFocus');
 
 		_menu.ActiveSlide--;
-
-		if (_menu.ActiveSlide == 1)
+		
+		if (_menu.ActiveSlide == 1) 
 			_menu.MenuScrollTop = 0;
 		else
 			_menu.MenuScrollTop += _menu.HudHeight;

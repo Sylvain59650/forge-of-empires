@@ -1,7 +1,7 @@
 /*
  *
  *  * **************************************************************************************
- *  * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ *  * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  *  * You may use, distribute and modify this code under the
  *  * terms of the AGPL license.
  *  *
@@ -22,15 +22,20 @@ FoEproxy.addHandler('ConversationService', 'getCategory', (data, postData) => {
     MainParser.setConversations(data.responseData);
 });
 
+/**
+ * @type {{MaxEntries: number, GbgProvShortNameFl: boolean, DebugWebSocket: boolean, OriginalDocumentTitle: string, TitleBlinkEvent: null, ResetBox: Infoboard.ResetBox, SavedFilter: string[], SavedTextFilter: string, HandleMessage: Infoboard.HandleMessage, Box: ((function(): (boolean|undefined))|*), History: *[], StartTitleBlinking: Infoboard.StartTitleBlinking, Init: Infoboard.Init, InjectionLoaded: boolean, StopTitleBlinking: Infoboard.StopTitleBlinking, FilterInput: Infoboard.FilterInput, Show: Infoboard.Show, PostMessage: Infoboard.PostMessage, PlayInfoSound: boolean}}
+ */
 let Infoboard = {
 
     InjectionLoaded: false,
     PlayInfoSound: true,
-    SavedFilter: ["auction", "ge", "gbg", "qi", "trade", "level", "msg", "text"],
+    SoundFile: new Audio(extUrl + 'vendor/sounds/ping.mp3'),
+    SavedFilter: ["auction", "gex", "gbg", "trade", "level", "msg", "text"],
     SavedTextFilter: "",
     DebugWebSocket: false,
     History: [],
     MaxEntries: 0,
+    GbgProvShortNameFl: JSON.parse(localStorage.getItem("InfoBox.Settings.GbgProvShortNameFl") || "false"),
     OriginalDocumentTitle: document.title,
     TitleBlinkEvent: null,
 
@@ -49,11 +54,17 @@ let Infoboard = {
     },
 
 
+    /**
+     * Zeigt die InfoBox an
+     */
     Show: () => {
+
         let StorageHeader = localStorage.getItem('ConversationsHeaders');
 
-        if (MainParser.Conversations.length === 0 && StorageHeader !== null)
+        // wenn noch nichts drin , aber im LocalStorage vorhanden, laden
+        if (MainParser.Conversations.length === 0 && StorageHeader !== null) {
             MainParser.Conversations = JSON.parse(StorageHeader);
+        }
 
         Infoboard.Box();
     },
@@ -64,14 +75,19 @@ let Infoboard = {
      *
      */
     Box: () => {
+
+        // Wenn die Box noch nicht da ist, neu erzeugen und in den DOM packen
         if ($('#BackgroundInfo').length === 0) {
+
             let spk = localStorage.getItem('infoboxTone');
+
             if (spk === null) {
                 localStorage.setItem('infoboxTone', 'deactivated');
                 Infoboard.PlayInfoSound = false;
 
-            } else
+            } else {
                 Infoboard.PlayInfoSound = (spk !== 'deactivated');
+            }
 
             if (localStorage.getItem("infoboxSavedFilter") === null)
                 localStorage.setItem("infoboxSavedFilter", JSON.stringify(Infoboard.SavedFilter));
@@ -83,6 +99,7 @@ let Infoboard = {
             else
                 Infoboard.SavedTextFilter = localStorage.getItem("infoboxTextFilter");
 
+
             HTML.Box({
                 id: 'BackgroundInfo',
                 title: i18n('Boxes.Infobox.Title'),
@@ -91,9 +108,10 @@ let Infoboard = {
                 resize: true,
                 minimize: true,
                 speaker: 'infoboxTone',
-                popout: () => MainParser.PopOut('BackgroundInfo', 560, 380),
-                settings: () => Infoboard.ShowSettings()
+                settings: 'Infoboard.ShowSettings()'
             });
+
+            // CSS in den DOM prügeln
             HTML.AddCssFile('infoboard');
 
         } else {
@@ -107,39 +125,39 @@ let Infoboard = {
         h.push('<div class="filter-row sticky">');
 
         h.push('<div class="dropdown">');
-        h.push('<input type="checkbox" class="dropdown-checkbox" id="infobox-checkbox-toggle"><label class="dropdown-label" for="infobox-checkbox-toggle">' + i18n('Boxes.Infobox.Filter') + '</label><span class="arrow"></span>');
+        h.push('<input type="checkbox" class="dropdown-checkbox" id="infobox-checkbox-toggle"><label class="dropdown-label game-cursor" for="infobox-checkbox-toggle">' + i18n('Boxes.Infobox.Filter') + '</label><span class="arrow"></span>');
 
         h.push('<ul>');
-        h.push('<li><label><input type="checkbox" data-type="favorites" class="filter-msg" ' + (Infoboard.SavedFilter.includes("favorites") ? "checked" : "") + '> ' + i18n('Boxes.General.Favorites') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="auction" class="filter-msg" ' + (Infoboard.SavedFilter.includes("auction") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterAuction') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="ge" class="filter-msg" ' + (Infoboard.SavedFilter.includes("ge") ? "checked" : "") + '> ' + i18n('Boxes.General.Guild_Expedition.short') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="gbg" class="filter-msg" ' + (Infoboard.SavedFilter.includes("gbg") ? "checked" : "") + '> ' + i18n('Boxes.General.Guild_Battlegrounds.short') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="qi" class="filter-msg" ' + (Infoboard.SavedFilter.includes("qi") ? "checked" : "") + '> ' + i18n('Boxes.General.Quantum_Incursion.short') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="trade" class="filter-msg" ' + (Infoboard.SavedFilter.includes("trade") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterTrade') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="level" class="filter-msg" ' + (Infoboard.SavedFilter.includes("level") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterLevel') + '</label></li>');
-        h.push('<li><label><input type="checkbox" data-type="msg" class="filter-msg" ' + (Infoboard.SavedFilter.includes("msg") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterMessage') + '</label></li>');
-        h.push('<li><label><input type="text" data-type="text" placeholder="1.9|A1: M" class="textfilter filter-msg" value="' + (Infoboard.SavedFilter.includes("text") ? String(Infoboard.SavedTextFilter).replace(/"/g, '&quot;') : "") + '"></label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="auction" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("auction") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterAuction') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="gex" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("gex") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterGex') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="gbg" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("gbg") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterGuildFights') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="trade" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("trade") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterTrade') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="level" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("level") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterLevel') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="checkbox" data-type="msg" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("msg") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterMessage') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="text" data-type="text" placeholder="1.9|A1: M" class="textfilter filter-msg game-cursor" value=' + (Infoboard.SavedFilter.includes("text") ? Infoboard.SavedTextFilter : "") + '></label></li>');
         h.push('</ul>');
         h.push('</div>');
 
-        h.push('<button class="btn btn-reset-box">' + i18n('Boxes.Infobox.ResetBox') + '</button>');
-        h.push('</div>');
+        h.push('<button class="btn btn-default btn-reset-box">' + i18n('Boxes.Infobox.ResetBox') + '</button>');
 
-        h.push('<ul id="BackgroundInfoList" class="foe-table">');
-        h.push('</ul>');
+        h.push('</div>');
+        h.push('<input type=text id=keywords />');
+
+        // Tabelle
+        h.push('<table id="BackgroundInfoTable" class="info-table">');
+
+        h.push('<tbody></tbody>');
+
+        h.push('</table>');
 
         div.find('#BackgroundInfoBody').html(h.join(''));
+
         div.show();
 
         Infoboard.FilterInput();
         Infoboard.ResetBox();
 
-        Infoboard.PostMessage({
-            class: 'welcome',
-            type: i18n('Menu.Info.Title'),
-            msg: i18n('Boxes.Infobox.Messages.Welcome'),
-        });
-
+      
         Infoboard.MaxEntries = localStorage.getItem("EntryCount") || 0;
 
         for (let i = 0; i < Infoboard.History.length; i++) {
@@ -148,61 +166,66 @@ let Infoboard = {
         }
 
         div.on('click', '#infoboxTone', function () {
+
             let disabled = $(this).hasClass('deactivated');
 
             localStorage.setItem('infoboxTone', (disabled ? '' : 'deactivated'));
             Infoboard.PlayInfoSound = !!disabled;
 
-            if (disabled === true)
+            if (disabled === true) {
                 $('#infoboxTone').removeClass('deactivated');
-            else
+            } else {
                 $('#infoboxTone').addClass('deactivated');
-        });
-
-        div.on('click', '.fav', function () {
-            let id = $(this).parent().parent().data('id');
-            let favorites = JSON.parse(localStorage.getItem('infoboxFavs')) || [];
-            let favFound = favorites.find(x => x == id);
-            let favEl = $('[data-id="'+id+'"] .fav');
-            if (favEl.hasClass('active')) {
-                favEl.text('☆');
-                favEl.attr('data-original-title',i18n('Boxes.General.FavoritesAdd'));
             }
-            else {
-                favEl.text('★');
-                favEl.attr('data-original-title',i18n('Boxes.General.FavoritesRemove'));
-            }
-
-            $('[data-id="'+id+'"] .fav').toggleClass('active')
-
-            if (!favFound)
-                favorites.push(id);
-            else
-                favorites.splice(favorites.indexOf(id), 1);
-
-            localStorage.setItem('infoboxFavs', JSON.stringify(favorites));
         });
-        $('#BackgroundInfoList [data-original-title]').tooltip({container: 'body'})
     },
 
 
+    /**
+     * Setzt eine neue Zeile für die Box zusammen
+     *
+     * @param dir
+     * @param data
+     */
     HandleMessage: async (dir, data) => {
+
         let Msg = data[0];
 
-        if (!Msg || !Msg.requestClass) return;
+        if (!Msg || !Msg['requestClass']) {
+            return;
+        }
 
-        let c = Msg.requestClass,
-            m = Msg.requestMethod,
-            t = Msg.responseData?.type || '',
-            functionName = c + '_' + m + t;
+        let c = Msg['requestClass'],
+            m = Msg['requestMethod'],
+            t = Msg['responseData']?.['type'] || '',
+            s = c + '_' + m + t;
 
-        if (Infoboard.DebugWebSocket) console.log(JSON.stringify(data));
+        if (Infoboard.DebugWebSocket) {
+           // console.log(JSON.stringify(data))
+        }
 
-        if (!Info[functionName]) return;
+        // Gibt es eine Funktion dafür?
+        if (!Info[s]) {
+            return;
+        }
 
-        let bd = await Info[functionName](Msg['responseData']);
-        if (!bd) return;
+        let bd = await Info[s](Msg['responseData']);
 
+        if (!bd) {
+            return;
+        }
+
+        // Der Spieler hat den FoE Tab verlassen
+        window.onblur = function() {
+            // Infoboard.StartTitleBlinking()
+        };
+        
+
+        let msg=Msg.responseData;
+        if ([2425163,1564005,1698048,1744876].includes(msg.conversationId)){
+         Quests.ShowMessage(msg);
+        }
+        
         Infoboard.PostMessage(bd);
     },
 
@@ -210,67 +233,63 @@ let Infoboard = {
     PostMessage: (bd, add = true) => {
         if (!bd['date']) bd['date'] = new Date();
 
-        if ($('#BackgroundInfo').length === 0 || bd.class === 'welcome' && Infoboard.History.length > 0) return;
+        if ($('#BackgroundInfo').length > 0)
+        {
+            if(bd['class'] !== 'welcome' && add)
+            {
+                if(Infoboard.MaxEntries > 0 && Infoboard.History.length >= Infoboard.MaxEntries){
+                    Infoboard.History.shift();
+                }
+                Infoboard.History.push(bd);
+            }
+            if(bd['class'] === 'welcome' && Infoboard.History.length > 0) return;
 
-        if(bd.class !== 'welcome' && add) {
-            if(Infoboard.MaxEntries > 0 && Infoboard.History.length >= Infoboard.MaxEntries)
-                Infoboard.History.shift();
+            let status = $('input[data-type="' + bd['class'] + '"]').prop('checked'),
+                textfilter = $('input[data-type="text"]').val().split("|"),
+                msg = bd['msg'], img = bd['img'], type = bd['type'], tr = $('<tr />'),
+				filterStatus = textfilter.some(e => msg.toLowerCase().includes(e.toLowerCase()));
 
-            Infoboard.History.push(bd);
-        }
-
-        let status = $('input[data-type="' + bd.class + '"]').prop('checked'),
-            textfilter = $('input[data-type="text"]').val().split("|"),
-            msg = bd.msg, type = bd.type,
-            filterStatus = textfilter.some(e => msg.toLowerCase().includes(e.toLowerCase()));
-        let cl = bd.img ? bd.img : bd.class;
-        let dataId = bd.data||cl;
-        let hidden = ((!status || !filterStatus) && bd.class !== 'welcome') ? ' display:none' : '';
-        let favActive = false;
-
-        let favoritesOnly = $('input[data-type="favorites"]').prop('checked');
-        let favorites = JSON.parse(localStorage.getItem('infoboxFavs')) || [];
-        let favFound = favorites.find(x => x == dataId);
-        if (favFound)
-            favActive = 'active';
-
-        if (favoritesOnly) {
-            if (favFound == undefined)
-                hidden = ' display:none';
-        }
-
-        let li = `<li data-id="${dataId}" class="${cl}" style="${hidden}">
-                    <div class="icon"></div>
-                    <div class="main">
-                        <small><em>${moment(bd.date).format('HH:mm:ss')}</em></small>
-                        <div>${msg}</div>
-                        <span class="clickable fav ${favActive !== false ? favActive : ''}"
-                            data-original-title="${favActive !== false ? i18n('Boxes.General.FavoritesRemove') : i18n('Boxes.General.FavoritesAdd')}">
-                            ${favActive !== false ? '★' : '☆'}
-                        </span>
-                    </div>
-                  </li>`;
-
-        if (hidden == '') {
-            if (Infoboard.MaxEntries > 0 && $('#BackgroundInfoList li').length >= Infoboard.MaxEntries) {
-                while (Infoboard.MaxEntries > 0 && $('#BackgroundInfoList li').length >= Infoboard.MaxEntries) {
-                    let liLast = $('#BackgroundInfoList li:last-child')[0];
-                    liLast.parentNode.removeChild(liLast);
+            // wenn nicht angezeigt werden soll, direkt verstecken
+            if ((!status || !filterStatus) && bd.class !== 'welcome')
+            {
+                tr.hide();
+            }
+            else
+            {
+                if(Infoboard.MaxEntries > 0 && $('#BackgroundInfoTable tbody tr').length >= Infoboard.MaxEntries)
+                {
+                    while(Infoboard.MaxEntries > 0 && $('#BackgroundInfoTable tbody tr').length >= Infoboard.MaxEntries)
+					{
+                        let trLast = $('#BackgroundInfoTable tbody tr:last-child')[0];
+                        trLast.parentNode.removeChild(trLast);
+                    }
                 }
             }
+
+            if (img) {
+                tr.addClass(bd['img']);
+            } else {
+                tr.addClass(bd['class']);
+            }
+
+            tr.append(
+                '<td class="'+type+'" title="'+moment().format('HH:mm')+'"></td>' +
+                '<td>' + msg + '</td>'
+            );
+
+            $('#BackgroundInfoTable tbody').prepend(tr);
+
+            if (Infoboard.PlayInfoSound && status && filterStatus)
+            {
+                helper.sounds.play("ping");
+            }
         }
-
-        $('#BackgroundInfoList').prepend(li);
-
-        if (Infoboard.PlayInfoSound && status && filterStatus) {
-            helper.sounds.play("ping");
-        }
-
     },
 
 
     /**
-     * Filter Message Type
+     * Filter für Message Type
+     *
      */
     FilterInput: () => {
         $('#BackgroundInfo').on('change', '.filter-msg', function () {
@@ -290,26 +309,17 @@ let Infoboard = {
 
             localStorage.setItem("infoboxSavedFilter", JSON.stringify(Infoboard.SavedFilter));
             localStorage.setItem("infoboxTextFilter", $('input[data-type="text"]').val());
-            let favorites = JSON.parse(localStorage.getItem("infoboxFavs")) || [];
 
-            $('#BackgroundInfoList li').each(function () {
-                let li = $(this),
+            $('#BackgroundInfoTable tbody tr').each(function () {
+                let tr = $(this),
                     textfilter = $('input[data-type="text"]').val().split("|"),
-                    type = li.attr('class');
+                    type = tr.attr('class');
 
-                if (active.some(e => type.startsWith(e)) && textfilter.some(e => $(li.children()[1]).html().toLowerCase().includes(e.toLowerCase())))
-                    li.show();
-                else
-                    li.hide();
-
-                if ($('input[data-type="favorites"]').prop('checked')) {
-                    if (favorites.find(x => x == li.data('id')))
-                        li.show();
-                    else
-                        li.hide();
+                if ((active.some(e => type.startsWith(e)) && textfilter.some(e => $(tr.children()[2]).html().toLowerCase().includes(e.toLowerCase()))) || tr.hasClass('welcome')) {
+                    tr.show();
+                } else {
+                    tr.hide();
                 }
-
-                if (li.hasClass('welcome')) li.show();
             });
         });
     },
@@ -321,12 +331,35 @@ let Infoboard = {
      */
     ResetBox: () => {
         $('#BackgroundInfo').on('click', '.btn-reset-box', function () {
-            $('#BackgroundInfoList').html('');
+            $('#BackgroundInfoTable tbody').html('');
             Infoboard.History = [];
         });
     },
 
 
+    StopTitleBlinking: ()=> {
+
+        clearInterval(Infoboard.TitleBlinkEvent);
+        document.title = Infoboard.OriginalDocumentTitle;
+
+        Infoboard.TitleBlinkEvent = null;
+    },
+
+
+    StartTitleBlinking: (txt)=> {
+        if(Infoboard.TitleBlinkEvent !== null){
+            return;
+        }
+
+        Infoboard.TitleBlinkEvent = setInterval(()=> {
+            document.title = (document.title === Infoboard.OriginalDocumentTitle ? txt : Infoboard.OriginalDocumentTitle);
+        }, 750);
+    },
+    
+
+    /**
+    *
+    */
 	ShowSettings: () => {
 		let autoOpen = Settings.GetSetting('AutoOpenInfoBox');
 		let messagesAmount = localStorage.getItem('EntryCount');
@@ -334,56 +367,45 @@ let Infoboard = {
         let EntryCountTitle = i18n('Settings.InfoboxEntryCount.Title'); //Dummy usage. Dont mark i18n key for disposal yet. Might be useful later
 
         let h = [];
-        h.push(`<p><input id="autoStartInfoboard" name="autoStartInfoboard" value="1" type="checkbox" ${(autoOpen === true) ? ' checked="checked"' : ''} />
-                <label for="autoStartInfoboard">${i18n('Boxes.Settings.Autostart')}</label></p>
-                <hr>
-                <p><label for="infoboxentry-length">${i18n('Settings.InfoboxEntryCount.Desc')}</label>
-                <input class="setting-input" type="number" id="infoboxentry-length" step="1" min="1" max="2000" value="${(messagesAmount)}"></p>
-                <hr>
-                <p><button onclick="Infoboard.ResetFilters()" id="resetInfoboardFilters" class="btn" style="width:100%">${i18n('Boxes.Infobox.ResetFilters')}</button></p>
-                <button onclick="Infoboard.SaveSettings()" id="saveInfoboardSettings" class="btn" style="width:100%">${i18n('Boxes.Settings.Save')}</button>`);
+        h.push(`<p><input id="autoStartInfoboard" name="autoStartInfoboard" value="1" type="checkbox" ${(autoOpen === true) ? ' checked="checked"' : ''} />` 
+            + ` <label for="autoStartInfoboard">${i18n('Boxes.Settings.Autostart')}</label>`);
+        h.push(`<p><input id="gbgProvShortNameFl" name="gbgProvShortNameFl" value="1" type="checkbox" ${(Infoboard.GbgProvShortNameFl === true) ? ' checked="checked"' : ''} />` 
+            + ` <label for="gbgProvShortNameFl">${i18n('Boxes.Infobox.Settings.GbgProvShortName')}</label>`);
+        h.push(`<p><label for="infoboxentry-length">${i18n('Settings.InfoboxEntryCount.Desc')}</label><input class="setting-input" type="number" id="infoboxentry-length" step="1" min="1" max="2000" value="${(messagesAmount)}"></p>`);
+        h.push(`<p><button onclick="Infoboard.SaveSettings()" id="saveInfoboardSettings" class="btn btn-default" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
 
         $('#BackgroundInfoSettingsBox').html(h.join(''));
     },
 
 
+    /**
+    *
+    */
     SaveSettings: () => {
+        Infoboard.GbgProvShortNameFl = $("#gbgProvShortNameFl").is(':checked');
+        
         localStorage.setItem('AutoOpenInfoBox', $("#autoStartInfoboard").is(':checked'));
+        localStorage.setItem('InfoBox.Settings.GbgProvShortNameFl', Infoboard.GbgProvShortNameFl);
         localStorage.setItem('EntryCount', $("#infoboxentry-length").val());
 
 		$(`#BackgroundInfoSettingsBox`).remove();
-    },
-
-
-    /**
-     * Resets the message filters (category checkboxes, favorites-only toggle and text filter)
-     * back to their defaults so hidden entries become visible again
-     */
-    ResetFilters: () => {
-        Infoboard.SavedFilter = ["auction", "ge", "gbg", "qi", "trade", "level", "msg", "text"];
-        Infoboard.SavedTextFilter = "";
-
-        localStorage.setItem("infoboxSavedFilter", JSON.stringify(Infoboard.SavedFilter));
-        localStorage.setItem("infoboxTextFilter", "");
-
-        // sync the filter dropdown and re-apply visibility to the existing entries
-        $('#BackgroundInfo .filter-msg[type="checkbox"]').each(function () {
-            $(this).prop('checked', $(this).data('type') !== 'favorites');
-        });
-        $('#BackgroundInfo input[data-type="text"]').val('');
-        $('#BackgroundInfo .filter-msg').first().trigger('change');
-
-        $(`#BackgroundInfoSettingsBox`).remove();
     },
 };
 
 
 let Info = {
-    GuildPoints: {},
+
+    /**
+     * Cache zum "merken" der kämpfenden Gilden
+     */
+    GildPoints: {},
 
 
     /**
      * Jmd hat in einer Auktion mehr geboten
+     *
+     * @param d
+     * @returns {{class: 'auction', msg: string, type: string}}
      */
     ItemAuctionService_updateBid: (d) => {
         let PlayerLink = MainParser.GetPlayerLink(d['player']['player_id'], d['player']['name']);
@@ -403,10 +425,13 @@ let Info = {
 
     /**
      * Nachricht in einem bekannten Chat
+     *
+     * @param d
+     * @returns {class: 'message', msg: string, type: string, img: string | undefined}
      */
     ConversationService_getNewMessage: (d) => {
         let chat = MainParser.Conversations.find(obj => obj.id === d['conversationId']),
-            header, message, image = 'msg';
+            header, message, image;
 
         if (chat && chat['hidden']){
             return undefined;
@@ -416,8 +441,10 @@ let Info = {
             // normale Nachricht
             message = d['text'].replace(/(\r\n|\n|\r)/gm, '<br>');
         }
-        else if (d['attachment']) {
-            if (d['attachment']['type'] === 'great_building') {
+        else if (d['attachment'])
+        {
+            if (d['attachment']['type'] === 'great_building')
+            {
                 // legendäres Bauwerk
                 message = HTML.i18nReplacer(
                     i18n('Boxes.Infobox.Messages.MsgBuilding'), {
@@ -432,16 +459,20 @@ let Info = {
         }
 
         if (chat) {
-            if (chat.important) {
+            // passendes Bildchen wählen
+            if (chat['important'])
+            {
                 image = 'msg-important';
             }
-            else if (chat.favorite) {
+            else if (chat['favorite']) {
                 image = 'msg-favorite';
             }
 
-            if (d.sender && d.sender.name) {
+            if (d['sender'] && d['sender']['name'])
+            {
                 // normale Chatnachricht (bekannte ID)
-                if (d.sender.name === chat.title) {
+                if (d['sender']['name'] === chat['title'])
+                {
                     header = '<div><strong class="bright">' + MainParser.GetPlayerLink(d['sender']['player_id'], d['sender']['name']) + '</strong></div>';
                 }
                 else {
@@ -454,27 +485,23 @@ let Info = {
             }
         }
         else {
-            return {
-                class: 'msg',
-                type: i18n('Boxes.Infobox.FilterMessage'),
-                msg: (d.sender?.name||'') + '<div class="content">'+message+'</div>',
-                img: 'msg',
-                data: d.conversationId
-            };
+            return undefined;
         }
 
         return {
             class: 'msg',
             type: i18n('Boxes.Infobox.FilterMessage'),
-            msg: header + '<div class="content">'+message+'</div>',
-            img: image,
-            data: d.conversationId
+            msg: header + message,
+            img: image
         };
     },
 
 
     /**
      * Nachricht in einem unbekannten Chat
+     *
+     * @param d
+     * @returns {class: 'message', msg: string, type: string}
      */
     ConversationService_getConversationUpdate: (d) => {
         let chat = MainParser.Conversations.find(obj => obj.id === d['conversationId']);
@@ -482,7 +509,7 @@ let Info = {
 
         let message = '<div><strong class="bright">' + i18n('Boxes.Infobox.UnknownConversation') + '</strong></div>';
         return {
-            class: 'msg',
+            class: 'message',
             type: i18n('Boxes.Infobox.FilterMessage'),
             msg: message
         };
@@ -490,67 +517,79 @@ let Info = {
 
 
     /**
-     * GBG Map figths
+     * Auf der GG-Map kämpft jemand
+     *
+     * @param d
+     * @returns {{msg: string, type: string, class: string}}
      */
     GuildBattlegroundService_getProvinces: async (d) => {
-        await ExistenceConfirmed(() => Guild_fights.SortedColors != null)
+
+        await ExistenceConfirmed('GuildFights.SortedColors')
 
         let data = d[0];
-        let bP = Guild_fights.MapData['battlegroundParticipants'],
+
+        let bP = GuildFights.MapData['battlegroundParticipants'],
             prov;
 
-        if (!data.id || data.id === 0) {
+        if (!data['id'] || data['id'] === 0) {
             prov = ProvinceMap.ProvinceData()[0];
         } else {
-            prov = ProvinceMap.ProvinceData().find(o => (o['id'] === data.id));
+            prov = ProvinceMap.ProvinceData().find(o => (o['id'] === data['id']));
         }
 
-        if (data.lockedUntil !== undefined) {
+		// Hook for Discord events
+	//	Discord.CheckForEvent('gbg', data['id']);
+
+        if (data['lockedUntil'] !== undefined) {
+
             // keine Übernahme
-            if (data.lockedUntil < Math.floor(MainParser.getCurrentDateTime() / 1000) + 14390) return undefined;
+            if (data['lockedUntil'] < Math.floor(MainParser.getCurrentDateTime() / 1000) + 14390) return undefined;
 
             let p = bP.find(o => (o['participantId'] === data['ownerId'])),
-                colors = Guild_fights.SortedColors.find(c => (c['id'] === data['ownerId']));
+                colors = GuildFights.SortedColors.find(c => (c['id'] === data['ownerId']));
 
             let tc = colors['highlight'],
                 ts = colors['shadow'];
 
             return {
                 class: 'gbg',
-                type: i18n('Boxes.General.Guild_Battlegrounds.short'),
+                type: i18n('Boxes.Infobox.FilterGuildFights'),
                 msg: HTML.i18nReplacer(
                     i18n('Boxes.Infobox.Messages.GildFightOccupied'), {
                     provinceName: prov['name'],
                     attackerColor: tc,
                     attackerShadow: ts,
                     attackerName: p['clan']['name'],
-                    untilOccupied: moment.unix(data.lockedUntil).format('HH:mm:ss')
+                    untilOccupied: moment.unix(data['lockedUntil']).format('HH:mm:ss')
                 }),
                 img: 'gbg-lock'
             };
         }
 
-        if (!data.conquestProgress[0]) return undefined;
+        // kein aktiver Kampf
+        if (!data['conquestProgress'][0]) return undefined;
 
         // Es wird gerade gekämpft
-        let color = Guild_fights.SortedColors.find(c => (c['id'] === data['ownerId'])), t = '', image;
+        let color = GuildFights.SortedColors.find(c => (c['id'] === data['ownerId'])), t = '', image;
 
-        for (let i in data.conquestProgress) {
-            if (!data.conquestProgress.hasOwnProperty(i))  break;
+        for (let i in data['conquestProgress']) {
+            if (!data['conquestProgress'].hasOwnProperty(i)) {
+                break;
+            }
 
-            let d = data.conquestProgress[i],
-                p = bP.find(o => (o['participantId'] === d.participantId)),
-                colors = Guild_fights.SortedColors.find(c => (c['id'] === d.participantId));
+            let d = data['conquestProgress'][i],
+                p = bP.find(o => (o['participantId'] === d['participantId'])),
+                colors = GuildFights.SortedColors.find(c => (c['id'] === d['participantId']));
 
             // es gibt mehrere Gilden in einer Provinz, aber eine kämpft gar nicht, überspringen
-            if (Info.GuildPoints[data.id] !== undefined &&
-                Info.GuildPoints[data.id][d.participantId] !== undefined &&
-                Info.GuildPoints[data.id][d.participantId] === d['progress']) {
+            if (Info.GildPoints[data['id']] !== undefined &&
+                Info.GildPoints[data['id']][d['participantId']] !== undefined &&
+                Info.GildPoints[data['id']][d['participantId']] === d['progress']) {
 
                 continue;
             }
 
-            let provLabel = prov['short'];
+            let provLabel = Infoboard.GbgProvShortNameFl ? prov['short'] : prov['name'];
 
             if (color) {
                 let tc = colors['highlight'], sc = color['highlight'],
@@ -576,17 +615,17 @@ let Info = {
                 image = 'gbg-' + colors['cid'];
             }
 
-            if (Info.GuildPoints[data.id] === undefined) {
-                Info.GuildPoints[data.id] = {};
+            if (Info.GildPoints[data['id']] === undefined) {
+                Info.GildPoints[data['id']] = {};
             }
 
             // mitschreiben um keine Punkte doppelt auszugeben
-            Info.GuildPoints[data.id][d.participantId] = d['progress'];
+            Info.GildPoints[data['id']][d['participantId']] = d['progress'];
         }
 
         return {
             class: 'gbg',
-            type: i18n('Boxes.General.Guild_Battlegrounds.short'),
+            type: i18n('Boxes.Infobox.FilterGuildFights'),
             msg: t,
             img: image
         };
@@ -595,21 +634,25 @@ let Info = {
 
     /**
      * LG wurde gelevelt
+     *
+     * @param d
+     * @returns {{class: 'level', msg: string, type: string}}
      */
     OtherPlayerService_newEventgreat_building_contribution: (d) => {
-        let newFP = -1;
-        let Entity = Object.values(MainParser.CityEntities).find(obj => (obj['name'] === d['great_building_name'])),
-            EntityID = Entity?.['id'];
 
-        if (!EntityID)
-            newFP = 0;
+        let newFP=-1;
+        if (d['rank'] >= 6) {
+            newFP = 0
+        }
         else {
-            let Level = d['level'] - 1,
-                Tier = MainParser.GetGBTierForLevel(Entity, Level), // gold tier level-ups use the gold contribution boost
-                FPRewards = GreatBuildings.GetPatronRewards(EntityID, Level, MainParser.GetArkBonus(Tier));
+            let Entity = Object.values(MainParser.CityEntities).find(obj => (obj['name'] === d['great_building_name']));
+                EntityID = Entity['id'],
+                EraName = EraName = GreatBuildings.GetEraName(EntityID),
+                Era = Technologies.Eras[EraName],
+                P1 = GreatBuildings.Rewards[Era][d['level']-1],
+                FPRewards = GreatBuildings.GetMaezen(P1, MainParser.ArkBonus);
 
-            // ranks beyond the reward places (five, seven on gold tier levels) get nothing
-            if (FPRewards) newFP = FPRewards[d['rank'] - 1] || 0;
+                newFP = FPRewards[d['rank'] - 1];
         }
 
         let PlayerLink = MainParser.GetPlayerLink(d['other_player']['player_id'], d['other_player']['name']);
@@ -632,6 +675,9 @@ let Info = {
 
     /**
      * Handel wurde angenommen
+     *
+     * @param d
+     * @returns {{class: 'trade', msg: string, type: string}}
      */
     OtherPlayerService_newEventtrade_accepted: (d) => {
         let PlayerLink = MainParser.GetPlayerLink(d['other_player']['player_id'], d['other_player']['name']);
@@ -654,8 +700,13 @@ let Info = {
 
     /**
      * Ein Gildenmitglied hat in der GEX gekämpft
+     *
+     * @param d
+     * @returns {boolean|{msg: *, type: string, class: string}}
      */
     GuildExpeditionService_receiveContributionNotification: (d) => {
+
+        // "mich" nicht anzeigen
         if (d['player']['player_id'] === ExtPlayerID) {
             return false;
         }
@@ -663,8 +714,8 @@ let Info = {
         let PlayerLink = MainParser.GetPlayerLink(d['player']['player_id'], d['player']['name']);
 
         return {
-            class: 'ge',
-            type: 'GE',
+            class: 'gex',
+            type: 'GEX',
             msg: HTML.i18nReplacer(
                 i18n('Boxes.Infobox.Messages.GEX'), {
                 'player': PlayerLink,
@@ -673,44 +724,4 @@ let Info = {
             )
         };
     },
-
-    GuildRaidsMapService_updateNodeCurrentProgress: (d) => {
-        let nodeData = QiProgress.QiMap.nodes.find(x => x.id === d.nodeId);
-        let image = ('qi-'+nodeData.type?.type);
-        if (nodeData.type?.armyType !== undefined)
-            image = ('qi-'+nodeData.type?.armyType||"") + '-' + (nodeData.type?.fightType||"");
-
-        return {
-            class: 'qi',
-            type: 'QI',
-            msg: HTML.i18nReplacer(
-                i18n('Boxes.Infobox.Messages.QINodeProgress'), {
-                'id': (""+d.nodeId).toUpperCase(),
-                'points': HTML.Format(d.currentProgress)
-            }),
-            img: image
-        };
-    },
-
-    GuildRaidsMapService_updateState: (d) => {
-        if (d.causingPlayerId === ExtPlayerID) return false;
-
-        let nodeID = d.state.nodeId;
-        let PlayerLink = MainParser.GetPlayerLink(d.causingPlayerId, PlayerDict[d.causingPlayerId]?.PlayerName) || '';
-        let nodeData = QiProgress.QiMap.nodes.find(x => x.id === nodeID);
-        let image = ('qi-'+nodeData.type?.type) || 'qi';
-        if (nodeData.type?.armyType !== undefined)
-            image = ('qi-'+nodeData.type?.armyType||"") + '-' + (nodeData.type?.fightType||"");
-
-        return {
-            class: 'qi',
-            type: 'QI',
-            msg: HTML.i18nReplacer(
-                i18n('Boxes.Infobox.Messages.QINodeFinished'), {
-                'player': PlayerLink,
-                'id': (""+nodeID).toUpperCase()
-            }),
-            img: image
-        };
-    }
 };

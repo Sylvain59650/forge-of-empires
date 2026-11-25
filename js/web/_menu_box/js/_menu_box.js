@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -31,7 +31,7 @@ let _menu_box = {
 			id: 'menu_box',
 			title: i18n('Global.BoxTitle'),
 			onlyTitle: true,
-			dragdrop: () => _menu_box.CheckButtons(),
+			dragdrop: '_menu_box.CheckButtons()',
 			minimize: true,
 			resize: true,
 			auto_close: false
@@ -57,7 +57,7 @@ let _menu_box = {
 	InsertMenuItem: (MenuItem) => {
 		$('#menu_boxBody').append(MenuItem);
 	},
-
+		
 
 	/**
 	 * Tooltips etc

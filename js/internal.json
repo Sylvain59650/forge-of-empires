@@ -3,75 +3,35 @@
 	"mouseActions",
 	"_languages",
 	"_helper",
-	"popup",
 	"_menu",
 	"_menu_bottom",
 	"_menu_right",
 	"_menu_box",
 	"indexdb",
 	"kits",
-	"inventory",
-	"ascended",
-	{
-		"name": "eventcockpit",
-		"parts": ["questtips"]
-	},
-	"checklist",
-	"citysearch",
-	"allies",
 	"outposts",
 	"profile",
-	"unit",
-	{
-		"name": "calculator",
-		"parts": ["settings"]
-	},
+	"calculator",
 	"infoboard",
-	{
-		"name": "productions",
-		"parts": ["rating", "tables"]
-	},
-	{
-		"name": "part-calc",
-		"parts": ["copybox", "powerleveling", "settings"]
-	},
+	"productions",
+	"part-calc",
+	"unit",
 	"alerts",
-	{
-		"name": "guild_fights",
-		"parts": ["province_map", "ranking"]
-	},
+	"guildfights",
 	"stats",
+	"campagnemap",
+	"boost_inventory",
 	"bonus-service",
-	{
-		"name": "technologies",
-		"parts": ["forecast"]
-	},
-	{
-		"name": "negotiation",
-		"parts": ["solver"]
-	},
+	"technologies",
+	"negotiation",
 	"eventchests",
 	"settings",
-	"announcements",
 	"investment",
 	"strategy-points",
-	{
-		"name": "battle-assist",
-		"parts": ["lineup"]
-	},
-	{
-		"name": "citymap",
-		"parts": ["city-buildings"]
-	},
-	{
-		"name": "city-builder",
-		"parts": ["worker", "renderer", "interaction", "optimizer", "progress"]
-	},
-	"building-marker",
+	"battle-assist",
+	"citymap",
 	"hidden-rewards",
 	"greatbuildings",
-	"gbbonus",
-	"gbgoods",
 	"notice",
 	"treasury",
 	"market",
@@ -90,7 +50,6 @@
 	"idleGame",
 	"scoutingtimes",
 	"discord",
-	"webrequest",
 	"bettermusic",
 	"minigame_aztecs",
 	"recurring-quests",
@@ -103,12 +62,10 @@
 	"cardgame",
 	"gbgbuildings",
 	"pvparena",
+	"qimap",
 	"worldchallenge",
 	"boost-potions",
 	"customTooltip",
 	"reconstruction",
-	"boosts",
-	"shopAssist",
-	"cablocker",
-	"yearreview"
+	"boosts"
 ]

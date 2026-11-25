@@ -1,41 +1,63 @@
 [
 	{
+		"name": "AutomaticNegotiation",
+		"status": true,
+		"group": "Auto",
+		"sort": 0
+	},
+	{
 		"name": "ShowEventChest",
-		"callback": "ShowEventHelpers",
 		"status": true,
 		"group": "Auto",
 		"sort": 1
 	},
 	{
-		"name": "BlockCollectAll",
-		"status": false,
+		"name": "ShowRougeUnitWarning",
+		"status": true,
 		"group": "Auto",
 		"sort": 2
 	},
 	{
-		"name": "ShowAnnouncements",
+		"name": "ShowBlueGalaxyHelper",
 		"status": true,
 		"group": "Auto",
-		"button": "Announcements.ShowAll()",
 		"sort": 3
+	},
+	{
+		"name": "ShowAllyList",
+		"status": true,
+		"group": "Auto",
+		"sort": 4 
+	},
+	{
+		"name": "ShowInvestments",
+		"status": true,
+		"group": "Auto",
+		"sort": 5
+	},
+	{
+		"name": "ShowGuildTreasuryLogExport",
+		"status": true,
+		"group": "Auto",
+		"sort": 7
+	},
+	{
+		"name": "ShowGBGBuildings",
+		"status": false,
+		"group": "Auto",
+		"sort": 9
+	},
+	{
+		"name": "AutoOpenInfoBox",
+		"status": false,
+		"group": "Auto",
+		"sort": 10
 	},
 	{
 		"name": "AutoOpenCloseBox",
 		"status": false,
 		"group": "Auto",
-		"sort": 4
-	},
-	{
-		"name": "ShowReconstructionList",
-		"status": true,
-		"group": "Auto",
-		"sort": 6
-	},
-	{
-		"name": "ShowRougeUnitWarning",
-		"status": true,
-		"group": "Auto",
-		"sort": 10
+		"sort": 11
 	},
 	{
 		"name": "ShowScoutingTimes",
@@ -50,22 +72,28 @@
 		"sort": 13
 	},
 	{
+		"name": "ShowAztecHelper",
+		"status": true,
+		"group": "Auto",
+		"sort": 14
+	},
+	{
 		"name": "ShowPvPArena",
 		"status": true,
 		"group": "Auto",
 		"sort": 15
 	},
 	{
-		"name": "ShowGBGBuildings",
-		"status": false,
-		"group": "Auto",
-		"sort": 16
-	},
-	{
 		"name": "ShowGBGPlayerInfo",
 		"status": true,
 		"group": "Auto",
 		"sort": 18
+	},
+	{
+		"name": "ShowGBGRewards",
+		"status": true,
+		"group": "Auto",
+		"sort": 19
 	},
 	{
 		"name": "ShowQIPlayerInfo",
@@ -77,26 +105,20 @@
 		"name": "ShowArmyAdvice",
 		"status": false,
 		"group": "Auto",
-		"button": "BattleAssist.ShowArmyAdviceConfig()",
+		"button":"BattleAssist.ShowArmyAdviceConfig()",
 		"sort": 24
 	},
 	{
-		"name": "ShowArmyLineup",
-		"status": true,
+		"name": "ShowMarketFilter",
+		"status": false,
 		"group": "Auto",
-		"sort": 25
+		"sort": 27
 	},
 	{
-		"name": "ShowGuildTreasuryLogExport",
+		"name": "ShowReconstructionList",
 		"status": true,
 		"group": "Auto",
-		"sort": 35
-	},
-	{
-		"name": "GexStockWarning",
-		"callback": "GexStockWarning",
-		"group": "Auto",
-		"sort": 40
+		"sort": 30
 	},
 	{
 		"name": "ResetBoxPositions",
@@ -105,11 +127,10 @@
 		"sort": 0
 	},
 	{
-		"name": "ShowLinks",
+		"name": "ShowOwnPartOnAllGBs",
 		"status": true,
-		"callback": "SelectWebsite",
 		"group": "Boxes",
-		"sort": 2
+		"sort": 1
 	},
 	{
 		"name": "ShowPlayersMotivation",
@@ -133,7 +154,7 @@
 		"name": "Auctions",
 		"status": false,
 		"group": "Boxes",
-		"button": "Auction.BuildBody()",
+		"button":"Auction.BuildBody()",
 		"sort": 9
 	},
 	{
@@ -141,6 +162,12 @@
 		"status": false,
 		"group": "Boxes",
 		"sort": 11
+	},
+	{
+		"name": "ShowLinks",
+		"status": true,
+		"group": "Boxes",
+		"sort": 13
 	},
 	{
 		"name": "HideHelperDuringBattle",
@@ -159,12 +186,6 @@
 		"status": false,
 		"group": "Boxes",
 		"sort": 20
-	},
-	{
-		"name": "ShowGBGRewards",
-		"status": false,
-		"group": "Boxes",
-		"sort": 19
 	},
 	{
 		"name": "SelectedMenu",
@@ -200,6 +221,7 @@
 		"name": "ShowBuildingsExpired",
 		"status": true,
 		"group": "Extension",
+		"button":"MainParser.Inactives.showSettings()",
 		"sort": 9
 	},
 	{
@@ -260,42 +282,7 @@
 	{
 		"name": "LoadBeta2",
 		"group": "About",
-		"button": "window.open('https://github.com/mainIine/foe-helfer-extension/archive/refs/heads/beta.zip', '_blank').focus();",
+		"button":"window.open('https://github.com/mainIine/foe-helfer-extension/archive/refs/heads/beta.zip', '_blank').focus();",
 		"sort": 19
-	},
-	{
-		"name": "ShowBlueGalaxyHelper",
-		"status": true,
-		"hidden": true
-	},
-	{
-		"name": "ShowAllyList",
-		"status": true,
-		"hidden": true
-	},
-	{
-		"name": "ShowInvestments",
-		"status": true,
-		"hidden": true
-	},
-	{
-		"name": "ShowOwnPartOnAllGBs",
-		"status": false,
-		"hidden": true
-	},
-	{
-		"name": "AutomaticNegotiation",
-		"status": true,
-		"hidden": true
-	},
-	{
-		"name": "ShowAztecHelper",
-		"status": true,
-		"hidden": true
-	},
-	{
-		"name": "ShowShopAssist",
-		"status": true,
-		"hidden": true
 	}
 ]

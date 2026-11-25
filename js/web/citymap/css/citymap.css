@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -11,18 +11,18 @@
  * **************************************************************************************
  */
 
-#citymap-main {
+#city-map-overlay {
 	left: 15px;
 	width: 70em;
 	bottom: 15px;
 	top: 15px;
 }
 
-#citymap-mainBody.window-body {
+#city-map-overlayBody.window-body {
 	position: relative;
 }
 
-#citymap-mainBody #citymap-wrapper {
+#city-map-overlayBody #citymap-wrapper {
 	position: relative;
 	width: 100%;
 	height: 100%;
@@ -35,6 +35,7 @@
 	top: 0;
 	right: 240px;
 	left: 0;
+	border-bottom: 2px solid #281207;
 	z-index: 5000;
 	padding: 2px;
 	box-sizing: border-box;
@@ -48,9 +49,10 @@
 	right: 240px;
 	bottom: 0;
 	left: 0;
-	border-right: 2px solid var(--text-darker);
+	border-right: 2px solid #281207;
 	background-color: var(--black-50);
 	box-sizing: border-box;
+	padding: 40px 20px;
 }
 
 .outpost #map-container {
@@ -65,7 +67,7 @@
 #sidebar {
 	position: absolute;
 	width: 240px;
-	padding: 12px;
+	padding: 15px;
 	right: 0;
 	top: 0;
 	bottom: 0;
@@ -74,149 +76,21 @@
 	box-sizing: border-box;
 }
 
-#sidebar.main #area-state img {
-	width: 22px;
-}
-#sidebar.main #area-state ul, #sidebar.main #area-state li {
-	margin: 0;
-	padding: 0;
-}
-
-#sidebar.main #area-state ul + b {
-	border-top: 1px dotted var(--text-darker);
-	padding: 5px 0;
-	margin: 5px 0 2px;
-	color: var(--sunflower);
-	display: block;
-}
-
-#sidebar.main #area-state .highlight-map li:hover {
-	background-color: var(--black-30);
-	margin: 0 -2px;
-	padding: 0 2px;
-}
-
-#sidebar.main .highlight-map li.active span:first-child {
-	font-weight: bold;
-}
-
-#sidebar.main #area-state li {
-	display: inline-flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-}
-#sidebar.main #area-state li span:last-child {
-	text-align: right;
-}
-#sidebar #area-state li.clickable:hover span:first-child {
-	font-weight: bold;
-	color: var(--sunflower);
-}
-
-.outpost #BuildingsFilter, .outpost #city-map-menu .btn-group, .outpost #map-filters {
+.outpost #sidebar, .outpost #BuildingsFilter, .outpost #city-map-menu .btn-group, .outpost #map-filters {
 	display: none;
 }
 
-.outpost #sidebar {
+.outpost.guild_raids #sidebar {
 	display: block;
-	width: 420px;
+	width: 400px;
 	padding: 3px;
-	z-index: 5001;
 }
 
-.outpost .metaSums {
-	background: linear-gradient(180deg, var(--text-dark2) 20%, transparent);
-	padding: 7px;
-}
-.outpost.guild_raids .metaSums span {
-	padding: 2px;
-}
-.outpost:not(.guild_raids) .metaSums span {
-	height: 20px;
-	display: inline-flex;
-	width: 25px;
-	position: relative;
-}
-.outpost:not(.guild_raids) .metaSums span::before {
-	position: absolute;
-	top: 3px;
-}
-.outpost:not(.guild_raids) .metaSums span.diplomacy::before {
-	top: 21px;
-}
-.outpost .metaSums i {
-	font-size: 90%;
+.outpost.guild_raids #map-container, .outpost.guild_raids #city-map-menu {
+	right: 400px;
 }
 
-.outpost .metaSums .productions, .outpost .metaSums .boosts {
-	display: flex;
-	justify-content: center;
-	gap: 2px;
-}
-
-.outpost.guild_raids .flex.between span {
-	display: inline-flex;
-	align-items: center;
-}
-
-.outpost.guild_raids .flex.between img {
-	height: 24px;
-}
-
-.outpost.guild_raids .euphoria150 {
-	color: var(--limegreen);
-	font-weight: bold;
-}
-
-.outpost.guild_raids .euphoria20 {
-	color: var(--danger-red);
-	font-weight: bold;
-}
-
-.outpost.guild_raids #sidebar .allBuildings.foe-table thead tr th {
-	vertical-align: middle !important;
-}
-
-.outpost.guild_raids #sidebar .allBuildings {
-	font-size: 90%;
-}
-
-.outpost.guild_raids #sidebar .allBuildings img, .outpost .metaSums .boosts img {
-	max-height: 20px;
-}
-
-.outpost #sidebar .allBuildings td .building img {
-	max-height: 31px;
-	max-width: 40px;
-	margin: auto;
-	display: inline-block;
-}
-
-.outpost #sidebar .allBuildings td div.building {
-	background: #6b7529;
-	width: 50px;
-	margin: -3px 0;
-	display: inline-flex;
-	vertical-align: middle;
-	text-align: center;
-	height: 31px;
-	border-bottom: 1px solid #50581b;
-	border-top: 1px solid #818d2f;
-}
-
-.outpost #map-container, .outpost #city-map-menu {
-	right: 420px;
-}
-
-.outpost.cultural_outpost .openOverview {
-	position: absolute;
-	top: 1px;
-	right: 423px;
-	z-index: 5001;
-}
-
-#citymap-mainBody .prod::before {
+#city-map-overlayBody .prod::before {
 	background: transparent url('../../productions/images/productions.png') -233px 2px no-repeat;
 	background-size: auto 100%;
 	display: inline-block;
@@ -225,34 +99,44 @@
 	height: 20px;
 }
 
-#citymap-mainBody .prod.happiness::before { background-position: -122px 2px; }
-#citymap-mainBody .prod.guild_raids_money::before { background-position: -20px 2px; }
-#citymap-mainBody .prod.guild_raids_supplies::before { background-position: -40px 2px; }
-#citymap-mainBody .prod.att_def_boost_attacker::before { background-position: -340px 1px; }
-#citymap-mainBody .prod.att_def_boost_defender::before { background-position: -362px 1px; }
-#citymap-mainBody .prod.guild_raids_action_points_collection::before { background-position: -383px 2px; }
+#city-map-overlayBody .prod.population::before { background-position: -142px 3px; }
+#city-map-overlayBody .prod.happiness::before { background-position: -122px 3px; }
+#city-map-overlayBody .prod.guild_raids_money::before { background-position: -20px 3px; }
+#city-map-overlayBody .prod.guild_raids_supplies::before { background-position: -40px 3px; }
+#city-map-overlayBody .prod.att_def_boost_attacker::before { background-position: -340px 1px; }
+#city-map-overlayBody .prod.att_def_boost_defender::before { background-position: -362px 1px; }
+#city-map-overlayBody .prod.guild_raids_action_points_collection::before { background-position: -383px 2px; }
 
-#citymap-mainBody .population::before, #citymap-mainBody th.happiness::before {
-	background: transparent url('../../productions/images/productions.png') -233px 0 no-repeat;
+#city-map-overlayBody th.population::before, #city-map-overlayBody th.happiness::before {
+	background: transparent url('../../productions/images/productions.png') -233px 2px no-repeat;
 	background-size: auto 100%;
 	display: inline-block;
 	content: '';
 	width: 23px;
 	height: 23px;
 }
-#citymap-mainBody .population::before { background-position: -162px 0; }
-#citymap-mainBody th.happiness::before { background-position: -140px 0; }
-#citymap-mainBody .diplomacy::before { zoom: 0.45; }
-#citymap-mainBody th .diplomacy { height: 24px; }
+#city-map-overlayBody th.population::before { background-position: -162px 3px; }
+#city-map-overlayBody th.happiness::before { background-position: -140px 3px; }
 
 #sidebar p {
+	margin-bottom: 5px;
+}
+
+#map-filters {
+	margin-bottom: 10px;
+	border-bottom: 1px solid var(--black-50);
+	padding-bottom: 5px;
+}
+
+#map-filters label {
+	display: block;
+	font-size: 90%;
 	margin-bottom: 5px;
 }
 
 #grid-outer {
 	position: relative;
 	transition: transform .35s linear;
-	margin: 40px 20px;
 }
 
 #grid-outer * {
@@ -270,8 +154,6 @@
 #map-grid {
 	display: flex;
 	flex-wrap: wrap;
-	width: 60.1em;
-	height: 64em;
 }
 
 #map-grid span[data-grid] {
@@ -280,41 +162,96 @@
 	border-bottom: 1px solid #ccc;
 }
 
-#map-grid .map-bg {
+.map-bg {
 	background: transparent url('../images/map-bg.png') center / cover no-repeat;
-	width: 4em;
-	height: 4em;
 }
-#map-grid .map-bg.startmap {
+.map-bg.startmap {
 	background: transparent url('../images/start-map-bg.png') center / cover no-repeat;
-	width: 16em;
-	height: 16em;
 }
 
 /* ------------------------------ */
-[data-unit="180"] #map-grid, [data-unit="180"] #map-buildings {
-	zoom: 1.8
+[data-unit="180"] #map-grid {
+	width: 108.18em;
+	height: 115.2em;
 }
-[data-unit="160"] #map-grid, [data-unit="160"] #map-buildings {
-	zoom: 1.6
+[data-unit="180"][data-view="skew"] {
+
 }
-[data-unit="140"] #map-grid, [data-unit="140"] #map-buildings {
-	zoom: 1.4
+[data-unit="180"] #map-grid span[data-grid] {
+	width: 1.8em;
+	height: 1.8em;
 }
-[data-unit="120"] #map-grid, [data-unit="120"] #map-buildings {
-	zoom: 1.2
+
+/* ------------------------------ */
+[data-unit="160"] #map-grid {
+	width: 96.16em;
+	height: 102.4em;
 }
-[data-unit="100"] #map-grid, [data-unit="100"] #map-buildings {
-	zoom: 1
+[data-unit="160"][data-view="skew"] {
+
+}
+[data-unit="160"] #map-grid span[data-grid] {
+	width: 1.6em;
+	height: 1.6em;
+}
+
+/* ------------------------------ */
+[data-unit="140"] #map-grid {
+	width: 84.14em;
+	height: 89.6em;
+}
+[data-unit="140"][data-view="skew"] {
+
+}
+[data-unit="140"] #map-grid span[data-grid] {
+	width: 1.4em;
+	height: 1.4em;
+}
+
+/* ------------------------------ */
+[data-unit="120"] #map-grid {
+	width: 72.12em;
+	height: 76.8em;
+}
+[data-unit="120"][data-view="skew"] {
+
+}
+[data-unit="120"] #map-grid span[data-grid] {
+	width: 1.2em;
+	height: 1.2em;
+}
+
+/* ------------------------------ */
+[data-unit="100"] #map-grid {
+	width: 60.1em;
+	height: 64em;
 }
 [data-unit="100"][data-view="skew"] {
 	transform: translate(0, -20%);
 }
-[data-unit="80"] #map-grid, [data-unit="80"] #map-buildings {
-	zoom: 0.8
+[data-unit="100"] #map-grid span[data-grid] {
+	width: 1em;
+	height: 1em;
 }
-[data-unit="60"] #map-grid, [data-unit="60"] #map-buildings {
-	zoom: 0.6
+
+/* ------------------------------ */
+[data-unit="80"] #map-grid {
+	width: 48.08em;
+	height: 51.2em;
+}
+[data-unit="2.5"] #map-grid span[data-grid] {
+	width: 0.8em;
+	height: 0.8em;
+}
+
+/* ------------------------------ */
+[data-unit="60"] #map-grid {
+	width: 36.06em;
+	height: 38.4em;
+}
+[data-unit="60"] #map-grid span[data-grid] {
+	width: 0.6em;
+	height: 0.6em;
 }
 
 /* ------------------------------ */
@@ -339,17 +276,7 @@
 	z-index: 1;
 }
 
-.allBuildings tr td:first-child::before {
-	content: '';
-	width: 9px;
-	height: 9px;
-	display: inline-block;
-	border-radius: 7px;
-	margin: 0 3px 0 -2px;
-	box-shadow: 0 1px 1px var(--black-65), 0 1px 3px var(--black-50);
-}
-
-#grid-outer span.residential, tr.residential td:first-child::before {
+#grid-outer span.residential {
 	background-color: var(--background-color-residential);
 	border-color: var(--border-color-residential);
 }
@@ -357,27 +284,35 @@
 	background-color: var(--background-color-tower);
 	border-color: var(--border-color-tower);
 }
-#grid-outer span.decoration, tr.decoration td:first-child::before, #grid-outer span.diplomacy, tr.diplomacy td:first-child::before {
+#grid-outer span.decoration {
 	background-color: var(--background-color-decoration);
 	border-color: var(--border-color-decoration);
 }
+/*#grid-outer span.special {
+	background-color: var(--background-color-special);
+	border-color: var(--border-color-special);
+}*/
+/*#grid-outer span.chain {
+	background-color: var(--background-color-chain);
+	border-color: var(--border-color-chain);
+}*/
 #grid-outer span.street {
 	background-color: var(--background-color-street);
 	border-color: var(--border-color-street);
 }
-#grid-outer span.goods, #grid-outer span.cultural_goods_production, tr.cultural_goods_production td:first-child::before {
+#grid-outer span.goods, #grid-outer span.cultural_goods_production {
 	background-color: var(--background-color-goods);
 	border-color: var(--border-color-goods);
 }
-#grid-outer span.culture, tr.culture td:first-child::before {
+#grid-outer span.culture {
 	background-color: var(--background-color-culture);
 	border-color: var(--border-color-culture);
 }
-#grid-outer span.main_building, tr.main_building td:first-child::before {
+#grid-outer span.main_building {
 	background-color: var(--background-color-main_building);
 	border-color: var(--border-color-main_building);
 }
-#grid-outer span.production, tr.production td:first-child::before {
+#grid-outer span.production, #grid-outer span.diplomacy {
 	background-color: var(--background-color-production);
 	border-color: var(--border-color-production);
 }
@@ -396,7 +331,7 @@
 	left: 50%;
 	top: 50%;
 	padding: 2px 3px;
-	background-color: var(--grey);
+	background-color: #333;
 	white-space: nowrap;
 }
 
@@ -414,26 +349,46 @@
 #grid-outer span.older-3.diagonal, span.older-3.diagonal {
 	background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgb(165, 74, 62) 2px, rgb(165, 74, 62) 7px);
 }
-#grid-outer span.too-old.diagonal, span.too-old.diagonal {
+#grid-outer span.to-old.diagonal, span.to-old.diagonal {
 	background-image: repeating-linear-gradient(202deg, transparent, transparent 5px, rgb(171, 26, 13) 2px, rgb(171, 26, 13) 7px)
 }
 #grid-outer span.noStreet.highlight {
 	background-color: var(--background-color-noStreet);
 	border-color: var(--border-color-noStreet);
+	animation-name: color;
+    animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
 }
 #grid-outer span:not(.street).rating10.highlight4 {
 	background-color: #f00;
 	border-color: #c00;
+	animation-name: color;
+    animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
 }
 #grid-outer span:not(.street).rating20.highlight4 {
 	background-color: rgb(255, 102, 0);
 	border-color: #c00;
 	background-image: repeating-linear-gradient(-45deg, transparent, transparent 5px, #c00 2px, #c00 7px);
+	animation-name: color;
+    animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
 }
 #grid-outer span:not(.street).rating30.highlight4 {
 	background-color: rgb(255, 208, 0);
 	border-color: #c00;
 	background-image: repeating-linear-gradient(-45deg, transparent, transparent 5px, #c00 2px, #c00 7px);
+	animation-name: color;
+    animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
 }
 #grid-outer span.ascendable.highlight2 {
 	background-color: var(--background-color-ascendable);
@@ -443,47 +398,6 @@
 	background-image: linear-gradient(45deg, transparent 50%, var(--background-color-ascendable) 50%);
 	background-color: var(--background-color-decayed);
 	border-color: var(--border-color-decayed);
-}
-#grid-outer span.collectSoon {
-	background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, #fff1 2px, #fff1 7px);
-}
-#grid-outer span.collectSoon::after {
-	content: '⬤';
-    display: flex;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    width: inherit;
-    color: #fffa;
-    height: inherit;
-	text-shadow: none;
-    font-size: 4px;
-}
-#grid-outer span.collectSoon[class*="collect1"]::after {
-	content: '⬤ ⬤';
-}
-#grid-outer span.collectSoon[class*="collect2"]::after {
-	content: '⬤ ⬤ ⬤';
-}
-#grid-outer.showLimited .isLimited {
-	background-image: radial-gradient(circle at 50%, #fff 2px, #0000 7px);
-    box-shadow: inset 0 0 0 1px #fff6;
-}
-#grid-outer.showGBG .fromGBG {
-	background-color: var(--background-color-gbg);
-	border-color: var(--border-color-gbg);
-}
-#grid-outer.showQI .fromQI {
-	background-color: var(--background-color-qi);
-	border-color: var(--border-color-qi);
-}
-#grid-outer.showChains .chain {
-    background-color: #ff00ff77;
-    border-color: #ff00ff;
-}
-#grid-outer.showSets .set {
-    background-color: #00ffff77;
-    border-color: #00ffff;
 }
 
 [data-view="skew"] .older-1.diagonal {
@@ -495,12 +409,12 @@
 [data-view="skew"] .older-3.diagonal {
 	background-image: repeating-linear-gradient(15deg, transparent, transparent 5px, rgb(165, 74, 62) 2px, rgb(165, 74, 62) 7px);
 }
-[data-view="skew"] .too-old.diagonal {
+[data-view="skew"] .to-old.diagonal {
 	background-image: repeating-linear-gradient(172deg, transparent, transparent 5px, rgb(171, 26, 13) 2px, rgb(171, 26, 13) 7px)
 }
 
 
-.too-old-legends span {
+.to-old-legends span {
 	display: inline-block;
 	width: 1em;
 	height: 1em;
@@ -525,23 +439,13 @@
 	width: 130px;
 }
 
-#area-state p {
-	margin: 3px 0;
-}
-
 #area-state .building-count-area span.square {
 	background-color: var(--background-color-military);
 	border-color:  var(--border-color-military);
-	border-radius: 3px;
 	width: 10px;
 	height: 10px;
 	display: inline-block;
 	margin-right: 5px;
-}
-
-#area-state .building-count-area span.square.military, tr.military td:first-child::before, tr.static_provider td:first-child::before {
-	background-color: var(--background-color-military);
-	border-color:  var(--border-color-military);
 }
 
 #area-state .building-count-area span.square.residential {
@@ -556,7 +460,7 @@
 	background-color: var(--background-color-street);
 	border-color: var(--border-color-street);
 }
-#area-state .building-count-area span.square.goods, tr.goods td:first-child::before {
+#area-state .building-count-area span.square.goods {
 	background-color: var(--background-color-goods);
 	border-color: var(--border-color-goods);
 }
@@ -585,33 +489,7 @@
 	border-color: var(--border-color-tower);
 }
 
-#area-state .building-count-area label {
-	display: block;
-	font-size: 90%;
-	margin-bottom: 5px;
-}
-
-#area-state .building-count-area .ratings {
-	display: flex;
-	justify-content: space-between;
-}
-
-#area-state .building-count-area .ratings span::after {
-    content: "➔";
-    display: inline-block;
-    background: var(--menu-arrow-bg);
-    padding: 0 2px;
-    border-radius: 3px;
-    color: var(--text-btn);
-    margin-left: 2px;
-    font-weight: normal;
-}
-
-#area-state .building-count-area .ratings span:hover::after {
-    filter: contrast(1.2);
-}
-
-#citymap-main #grid-outer span.highlighted {
+#city-map-overlay #grid-outer span.highlighted {
     border-width: 2px !important;
     filter: saturate(1.3) brightness(1.3) !important;
 	mix-blend-mode: color-dodge;
@@ -628,133 +506,8 @@
     0% {transform: scale(1,1);}
     100% {transform: scale(1.2,1.2);}
 }
-/* ------------------------------ efficiency heatmap ------------------------------ */
 
-/* traffic light scale: red = below, yellow = at, green = above the reference. The reds are darker than the greens,
-   so the steps also differ in brightness; the score printed on the tiles does not depend on colour at all */
-:root {
-	--citymap-eff-below-3: #c9302c;
-	--citymap-eff-below-2: #e5562f;
-	--citymap-eff-below-1: #f58634;
-	--citymap-eff-even: var(--sunflower);
-	--citymap-eff-above-1: #c9cf52;
-	--citymap-eff-above-2: var(--success);
-	--citymap-eff-above-3: #4fae4f;
-	--citymap-eff-unrated: var(--background-color-decayed);
-	--citymap-eff-edge: var(--black-65);
-}
-
-[data-eff-step] {
-	--citymap-eff-fill: var(--citymap-eff-even);
-	--citymap-eff-ink: var(--text-darkest);
-}
-[data-eff-step="-3"] { --citymap-eff-fill: var(--citymap-eff-below-3); --citymap-eff-ink: var(--white); }
-[data-eff-step="-2"] { --citymap-eff-fill: var(--citymap-eff-below-2); }
-[data-eff-step="-1"] { --citymap-eff-fill: var(--citymap-eff-below-1); }
-[data-eff-step="1"] { --citymap-eff-fill: var(--citymap-eff-above-1); }
-[data-eff-step="2"] { --citymap-eff-fill: var(--citymap-eff-above-2); }
-[data-eff-step="3"] { --citymap-eff-fill: var(--citymap-eff-above-3); }
-
-/* dark canvas, so only the rated buildings carry colour */
-#grid-outer.eff-map span.map-bg, #grid-outer.eff-map.desaturate span.map-bg {
-	filter: brightness(0.35) saturate(0.6) !important;
-}
-
-/* the heatmap owns the fill colour; unrated entities (streets, town hall, ...) stay neutral */
-#grid-outer.eff-map span.entity {
-	background-color: var(--citymap-eff-unrated) !important;
-}
-#grid-outer.eff-map span.entity[data-eff-step] {
-	background-color: var(--citymap-eff-fill) !important;
-}
-
-/* :where() keeps the specificity below the highlight rules: they keep their border colour and show as outline */
-#grid-outer:where(.eff-map) span.entity {
-	border-color: var(--citymap-eff-edge);
-}
-#grid-outer.eff-map span.highlight, #grid-outer.eff-map span.highlight2, #grid-outer.eff-map span.highlight3, #grid-outer.eff-map span.highlight4,
-#grid-outer.eff-map.showGBG .fromGBG, #grid-outer.eff-map.showQI .fromQI, #grid-outer.eff-map.showChains .chain, #grid-outer.eff-map.showSets .set {
-	border-width: 2px;
-	box-shadow: inset 0 0 0 1px var(--citymap-eff-edge);
-}
-#grid-outer.eff-map span:not(.street).highlight4 {
-	background-image: none;
-}
-
-/* score on buildings that are large enough */
-#grid-outer.eff-map span.entity[data-eff-score]::after {
-	content: attr(data-eff-score);
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 0.6em;
-	font-weight: bold;
-	line-height: 1;
-	color: var(--citymap-eff-ink);
-	/* halo in the fill colour keeps the score readable on top of highlight patterns */
-	text-shadow: 0 0 2px var(--citymap-eff-fill), 0 0 2px var(--citymap-eff-fill), 0 0 3px var(--citymap-eff-fill);
-	pointer-events: none;
-}
-/* inverse of rotate(33deg) skew(-30deg,-5deg): keeps the score upright in the skewed view */
-#grid-outer.eff-map[data-view="skew"] span.entity[data-eff-score]::after {
-	transform: matrix(1.0532, 0.0921, 0.6081, 1.0532, 0, 0) rotate(-33deg);
-}
-
-#area-state .eff-map-icon {
-	display: inline-block;
-	width: 22px;
-	height: 8px;
-	margin-right: 5px;
-	border-radius: 3px;
-	background: linear-gradient(90deg, var(--citymap-eff-below-3), var(--citymap-eff-even), var(--citymap-eff-above-3));
-}
-
-#eff-map-panel {
-	margin: 0 -4px 6px;
-	padding: 4px;
-	background-color: var(--black-30);
-	border-radius: 3px;
-}
-#eff-map-panel select {
-	width: 100%;
-	margin-bottom: 3px;
-}
-
-.eff-map-scale {
-	display: flex;
-	gap: 2px;
-	margin-top: 3px;
-}
-.eff-map-scale span {
-	flex: 1;
-	height: 10px;
-	border-radius: 2px;
-	background-color: var(--citymap-eff-fill);
-}
-.eff-map-ticks {
-	display: flex;
-	justify-content: space-between;
-	margin: 2px 0 4px;
-	font-size: 85%;
-}
-.eff-map-ticks span:nth-child(2) {
-	color: var(--sunflower);
-}
-#eff-map-legend li {
-	font-size: 90%;
-}
-
-/* heatmap line in the building tooltip of the map */
-.buildingTT .eff-map-tt {
-	padding: 0.2em 0.5em;
-}
-.eff-map-tt span[data-eff-step] {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	margin-right: 5px;
-	border-radius: 3px;
-	background-color: var(--citymap-eff-fill);
+@keyframes color {
+    0% {filter: saturate(1) brightness(1)}
+    100% {filter: saturate(1.3) brightness(0.8);}
 }

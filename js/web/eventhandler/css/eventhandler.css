@@ -1,6 +1,6 @@
 ﻿/*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -31,7 +31,7 @@
 
 #moppelhelper .bigerror {
     font-size: 150%;
-    color: var(--danger-red);
+    color: #ec4d4d;
 }
 
 #moppelhelper .header {
@@ -46,7 +46,7 @@
 }
 
 #moppelhelper #moppelhelperBody td a {
-    color: var(--sunflower);
+    color: var(--text-bright);
     text-decoration: none;
 }
 
@@ -59,7 +59,7 @@
 }
 
 #moppelhelper #moppelhelperBody .foe-table tr:first-child td:nth-child(5) strong {
-    color: var(--success);
+    color: var(--text-success);
 }
 
 #moppelhelper #moppelhelperBody table.foe-table tr th {

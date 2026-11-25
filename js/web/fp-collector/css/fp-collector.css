@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -29,12 +29,16 @@
     padding: 2px 5px;
 }
 
-#fp-collectorBody .btn-slim {
+#fp-collectorBody .btn-tight {
     max-width: unset;
 }
 
-#fp-collectorBody .foehelper-accordion-head {
-	margin-bottom: 0;
+#fp-collectorBody .foehelper-accordion:hover .foehelper-accordion-head {
+	box-shadow: inset 0px 0px 0px 2000px var(--background-table-hover);
+}
+
+#fp-collectorBody .open .foehelper-accordion-head {
+	margin-bottom: unset;
 }
 
 #fp-collectorBody .open .foehelper-accordion-body {
@@ -55,7 +59,7 @@
 
 #fp-collectorBody .foehelper-accordion-body div .fps {
 	width: 105px;
-	color: var(--sunflower);
+	color: var(--text-bright);
 	text-align: right;
 	margin: 0 8px 0 0;
 }
@@ -79,7 +83,7 @@
 	image-rendering: -webkit-optimize-contrast;
 }
 
-.foehelper-accordion-head.hiddenReward-head span.image, .foehelper-accordion-head.hidden_reward-head span.image {
+.foehelper-accordion-head.hiddenReward-head span.image {
 	background-image: url('../../x_img/incident.png') !important;
 }
 
@@ -87,16 +91,12 @@
 	background-image: url('../../x_img/expedition.png') !important;
 }
 
-.foehelper-accordion-head.guildExpedition-head span.image, .foehelper-accordion-head.guild_expedition_reward_notification-head span.image {
+.foehelper-accordion-head.guildExpedition-head span.image {
 	background-image: url('../../x_img/relic.png') !important;
 }
 
 .foehelper-accordion-head.shards-head span.image {
 	background-image: url('../../x_img/shards.png') !important;
-}
-
-.foehelper-accordion-head.item_store-head span.image {
-	background-image: url('../../x_img/item_store.png') !important;
 }
 
 .foehelper-accordion-head.battlegrounds_conquest-head span.image {

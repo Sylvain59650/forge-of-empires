@@ -1,7 +1,7 @@
 /*
  *
  *  * **************************************************************************************
- *  * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ *  * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  *  * You may use, distribute and modify this code under the
  *  * terms of the AGPL license.
  *  *
@@ -118,11 +118,6 @@ let CompareFriendsThreads = {
 
 		let key = CompareFriendsThreads.Threads.findIndex(t => t.id === CompareFriendsThreads.CurrentThread);
 
-		// thread not in the social list (e.g. list not loaded yet)
-		if (key === -1) {
-			return;
-		}
-
 		CompareFriendsThreads.Threads[key]['participants'] = data;
 	},
 
@@ -145,6 +140,7 @@ let CompareFriendsThreads = {
 			HTML.Box({
 				id: 'friendsCompareBox',
 				title: i18n('Boxes.CompareFriendsThreads.Title'),
+				ask: i18n('Boxes.CompareFriendsThreads.HelpLink'),
 				auto_close: true,
 				dragdrop: true,
 				minimize: true,
@@ -158,7 +154,7 @@ let CompareFriendsThreads = {
 		}
 
 		// no threads visited
-		if(!CompareFriendsThreads.Threads.some(t => t.participants.length > 0)){
+		if(CompareFriendsThreads.Threads[0]?.participants.length === undefined){
 			let info = `<div class="text-center text-warning" style="margin-top:2em">${i18n('Boxes.CompareFriendsThreads.Information')}</div>`;
 
 			$('#friendsCompareBoxBody').html(info);
@@ -200,8 +196,8 @@ let CompareFriendsThreads = {
 			let Player = PlayerList[p];
 			t.push('<tr>');
 
-			t.push(`<td>#${(parseInt(p) + 1)} <img style="max-width: 22px" src="${srcLinks.GetPortrait(Player['Avatar'])}" alt="${Player['PlayerName']}"> `
-				+ `${`<span class="activity activity_${Player['Activity']}"></span> `
+			t.push(`<td>#${(parseInt(p) + 1)} <img style="max-width: 22px" src="${srcLinks.GetPortrait(Player['Avatar'])}" alt="${Player['PlayerName']}"> ` 
+				+ `${`<span class="activity activity_${Player['Activity']}"></span> ` 
 				+ MainParser.GetPlayerLink(Player['PlayerID'], Player['PlayerName'])}</td>`);
 
 			for(let x in CompareFriendsThreads.Threads)

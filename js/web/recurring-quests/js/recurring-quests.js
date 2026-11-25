@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -12,30 +12,23 @@
  */
 
 FoEproxy.addHandler('QuestService', 'getUpdates', (data, postData) => {
-
+    
     if (!data.responseData) return;
     for (let q in data.responseData) {
         if (!data.responseData.hasOwnProperty(q)) continue;
         let quest = data.responseData[q];
-        if (quest.type=="generic" && quest.id >= 900000 && quest.id < 1000000  ) {
+        if (quest.id >= 900000 && quest.id < 1000000) {
             if (quest.genericRewards?.length > 0) {
                 if (!Recurring.data.Questlist[quest.id] && quest.genericRewards[0].flags.includes('random')) {
                     Recurring.data.Questlist[quest.id] = {'title':quest.title, 'diamonds': false};
                 }
-                let entry = Recurring.data.Questlist[quest.id];
-                if (!entry) continue;
                 if (quest.genericRewards[0].subType == "medals" || quest.genericRewards[0].subType == "premium") {
-                    entry.diamonds = true;
+                    Recurring.data.Questlist[quest.id].diamonds = true;
                 }
-                // A quest the game offers right now belongs to the current era. Right after
-                // an era change the new quests can still arrive with the old era (the era
-                // update and the quest update come in the same batch), they were then filtered
-                // out for good and the list stopped updating (#3555) — so move the era along
-                // whenever the quest shows up again.
-                if (CurrentEraID && (!entry.era || entry.era < CurrentEraID)) entry.era = CurrentEraID;
-                if (!entry.conditions) {
-                    entry.conditions = quest.successConditions;
-                    entry.groups = quest.successConditionGroups;
+                if (!Recurring.data.Questlist[quest.id].era) Recurring.data.Questlist[quest.id].era = CurrentEraID;
+                if (!Recurring.data.Questlist[quest.id].conditions) {
+                    Recurring.data.Questlist[quest.id].conditions = quest.successConditions;
+                    Recurring.data.Questlist[quest.id].groups = quest.successConditionGroups;
                 }
             }
         }
@@ -48,7 +41,7 @@ FoEproxy.addHandler('QuestService', 'getUpdates', (data, postData) => {
 
 let Recurring = {
     data: JSON.parse(localStorage.getItem('Recurring')) || {"Questlist": {}, "count":0, "showCounter": false,"hideTasks":true},
-
+    
 	/**
 	 * Box in den DOM
 	 */
@@ -64,7 +57,7 @@ let Recurring = {
                 'dragdrop': true,
                 'minimize': true,
                 'resize': true,
-                settings: () => Recurring.ShowSettingsButton()
+                'settings': 'Recurring.ShowSettingsButton()'
             });
 
             Recurring.RefreshGui();
@@ -75,17 +68,17 @@ let Recurring = {
     },
 
 
-	RefreshGui: (fromHandler = false) => {
+	RefreshGui: (fromHandler = false) => {       
         Recurring.SetCounter();
         if ($('#RecurringQuestsBox').length < 1) return;
-
+        
         if (Object.keys(Recurring.data.Questlist).length === 0) {
             $('#RecurringQuestsBox').fadeOut('500', function() {
                 $(this).remove();
             });
         }
-        else
-            Recurring.BuildBox();
+        else 
+            Recurring.BuildBox();  
     },
     filter: () => {
         Recurring.data.filter = [];
@@ -151,7 +144,7 @@ let Recurring = {
             $(this).addClass('loading');
             Recurring.loadingTimer = setTimeout(() => {
                 $(this).removeClass('loading');
-                let id=$(this).data('id');
+                id=$(this).data('id');
                 Recurring.data.Questlist[id].diamonds = !Recurring.data.Questlist[id].diamonds;
                 Recurring.SaveSettings();
                 Recurring.BuildBox();
@@ -170,7 +163,7 @@ let Recurring = {
     loadingTimer: null,
 
 	SetCounter: ()=> {
-        let $buttonNumber=$('#recurring-count')
+        $buttonNumber=$('#recurring-count')
         if ($buttonNumber.length==0) return;
         $buttonNumber.text(Recurring.data.count).show();
         if (Recurring.data.count === 0 || !Recurring.data.showCounter) $buttonNumber.hide();
@@ -217,7 +210,7 @@ let Recurring = {
         return t;
     },
     hideTasks: () => {
-        $('#recurringTable').toggleClass('hideTasks');
+        $('#recurringTable').toggleClass('hideTasks'); 
         Recurring.data["hideTasks"]=!Recurring.data.hideTasks;
         Recurring.SaveSettings();
     }

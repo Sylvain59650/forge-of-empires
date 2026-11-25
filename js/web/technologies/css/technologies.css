@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -14,7 +14,7 @@
 #technologies {
 	top: 30%;
 	right: 15%;
-	width: 560px;
+	width: 450px;
 	height: 500px;
 }
 
@@ -35,7 +35,7 @@
 }
 
 #technologies #technologiesBody .techno-head strong {
-	color: var(--sunflower);
+	color: var(--text-bright);
 }
 
 #technologies #technologiesBody table th {
@@ -44,27 +44,27 @@
 }
 
 #technologies #technologiesBody tr.total-row td {
-	border-top: 2px solid var(--beige);
+	border-top: 2px solid #efcf9a;
 	font-weight: 700;
 }
 
 #technologies #technologiesBody tr.resource-row td {
-	color: var(--sunflower);
+	color: var(--text-bright);
 	font-weight: 700;
 }
 
 #technologies #technologiesBody .text-danger {
-	color: var(--danger-red);
+	color: #ff4040;
 	font-weight: 700;
 }
 
 #technologies #technologiesBody .text-success {
-	color: var(--success);
+	color: var(--text-success);
 	font-weight: 700;
 }
 
 #technologies #technologiesBody .text-muted {
-	color: var(--ash);
+	color: var(--text-muted);
 }
 
 #technologies #technologiesBody td {
@@ -76,7 +76,7 @@
 	font-weight: 700;
 	display: inline-block;
 	margin-left: 6px;
-	background: var(--info-blue);
+	background: var(--text-info);
 	padding: 0 4px;
 	border-radius: 50%;
 	width: 10px;
@@ -99,7 +99,7 @@
 #technologies #technologiesBody .diplomacy-ask:hover .diplomacy-tip {
 	display: block;
 }
-#technologies #technologiesBody td.goods-image {
+#technologies #technologiesBody td.goods-image { 
 	padding: 0;
 	background-color: var(--black-50);
 }
@@ -110,77 +110,7 @@
 	text-align: center;
 }
 
-#technologies #technologiesBody .sprite-35::before {
+#technologies #technologiesBody .sprite-35::before { 
 	overflow: hidden;
 	display: inline-block;
-}
-
-/* Hinweis, wenn im aktuellen Zeitalter nichts mehr benötigt wird */
-#technologies #technologiesBody .technologies-hint {
-	margin: 4px 0 6px;
-	padding: 6px 8px;
-	text-align: center;
-	font-weight: bold;
-	color: var(--text-2, #d8c9a3);
-	background-color: var(--black-50);
-	border-radius: 3px;
-}
-
-/* Fertige Zeilen (nichts mehr benötigt) abdimmen */
-#technologies #technologiesBody tr.technologies-done {
-	opacity: 0.4;
-}
-
-/* Güter, die der Spieler selbst herstellen kann */
-#technologies #technologiesBody td.producible-good {
-	color: #4caf50;
-}
-
-/* Güter, die aktuell aktiv produziert werden */
-#technologies #technologiesBody td.actively-produced {
-	color: #4caf50;
-	font-style: italic;
-}
-/* Era subheadings of the "group by era" mode */
-#technologies #technologiesBody tr.technologies-era-row td {
-	padding: 3px 6px;
-	font-weight: bold;
-	color: var(--sunflower);
-	background: var(--table-bg-darker);
-	border-top: 1px solid var(--border-table-bottom);
-}
-/* single image icons of resources outside the goods sprite atlas (e.g. stellar points) */
-#technologies #technologiesBody td.goods-image img {
-	height: 24px;
-	width: auto;
-	display: block;
-	margin: 0 auto;
-}
-
-#technologies #technologiesBody .technologies-forecast {
-	padding: 6px 8px;
-	margin-bottom: 3px;
-	background: rgba(0, 0, 0, 0.25);
-	border-left: 3px solid var(--sunflower);
-	line-height: 1.4;
-}
-
-#technologies #technologiesBody .technologies-forecast strong,
-#technologies #technologiesBody td.forecast-bottleneck {
-	color: var(--sunflower);
-	font-weight: 700;
-}
-
-#technologies #technologiesBody td.forecast-income:hover {
-	text-decoration: underline dotted;
-}
-
-#technologies #technologiesBody td.forecast-manual::before {
-	content: '✎ ';
-	color: var(--sunflower);
-}
-
-#technologies #technologiesBody td.forecast-income input {
-	width: 70px;
-	text-align: right;
 }

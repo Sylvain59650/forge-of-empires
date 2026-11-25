@@ -1,6 +1,6 @@
 ﻿/*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -16,7 +16,7 @@
 #bluegalaxy {
     top: 30%;
     right: 15%;
-    width: 490px;
+    width: 450px;
     height: 500px;
 }
 
@@ -27,15 +27,15 @@
 }
 
 #bluegalaxy #bluegalaxyBody strong.success {
-    color: var(--success);
+    color: var(--text-success);
 }
 
 #bluegalaxy #bluegalaxyBody strong.error {
-    color: var(--danger-red);
+    color: #ec4d4d;
 }
 
 .text-bright {
-    color: var(--sunflower);
+    color: var(--text-bright);
 }
 
 #bluegalaxy .title {
@@ -45,65 +45,6 @@
 #bluegalaxy .header {
     margin-bottom: 2px;
     padding: 1em 0;
-}
-
-/* remaining double collections, clearly visible above the goods ratings */
-#bluegalaxy .header .collections-left {
-    font-size: 135%;
-    color: var(--sunflower);
-    margin: 4px 0 8px;
-}
-
-#bluegalaxy .header .collections-left strong {
-    font-size: 115%;
-}
-
-/* counter in the title bar, faded in once the table head is sticky */
-#bluegalaxyHeader .collections-left-title {
-    flex-shrink: 0;
-    margin: 0 auto;
-    padding: 0 8px;
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--sunflower);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .2s ease-in-out, visibility .2s;
-}
-
-#bluegalaxyHeader .collections-left-title.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-#bluegalaxyHeader .box-buttons {
-    margin-left: 0;
-}
-
-/* settings box */
-#bluegalaxySettingsBox {
-    min-width: 290px;
-    padding: 6px 10px;
-}
-
-#bluegalaxySettingsBox p {
-    margin: 6px 0;
-}
-
-#bluegalaxySettingsBox .bg-goods-row {
-    margin: 0;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--text-medium2);
-}
-
-#bluegalaxySettingsBox .bg-goods-row label {
-    display: block;
-    margin-bottom: 4px;
-}
-
-#bluegalaxySettingsBox .bg-goods-row input {
-    max-width: 60px;
 }
 
 #bluegalaxy table th.icon span {
@@ -149,10 +90,6 @@
     background-position: -524px 3px;
 }
 
-#bluegalaxy table th.icon.next_goods span::before  {
-    background-position: -838px 3px;
-}
-
 #bluegalaxy table th.icon.fragments span  {
     right: unset;
     left: 10px;
@@ -170,11 +107,6 @@
     font-size: 95%;
 }
 
-#bluegalaxy #bluegalaxyBody td.item-amount {
-    white-space: nowrap;
-    width: 1%;
-}
-
 #bluegalaxy #bluegalaxyBody .foe-table tr:first-child td:nth-child(5) strong {
-    color: var(--success);
+    color: var(--text-success);
 }

@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -32,9 +32,9 @@
 }
 #GBGBuildingsBody .highlight {
 	font-weight: 800;
-	color: var(--sunflower);
+	color: var(--text-bright);
 }
 #GBGBuildingsBody .breakline td {
-	border-top: 2px solid var(--sunflower);
+	border-top: 2px solid var(--text-bright);
 }
 

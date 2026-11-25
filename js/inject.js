@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -15,10 +15,11 @@
 {
 let scripts = {
 	main: ["once", "primed"],
+	proxy: ["once", "primed"],
 	vendor: ["once", "primed"],
 	internal: ["once", "primed"]
 };
-
+	
 function scriptLoaded (src, base) {
 	scripts[base].splice(scripts[base].indexOf(src),1);
 	if (scripts.internal.length == 1) {
@@ -29,6 +30,10 @@ function scriptLoaded (src, base) {
 		scripts.main.splice(scripts.main.indexOf("once"),1);
 		window.dispatchEvent(new CustomEvent('foe-helper#mainloaded'));
 	}
+	if (scripts.proxy.length == 1) {
+		scripts.proxy.splice(scripts.proxy.indexOf("once"),1);
+		window.dispatchEvent(new CustomEvent('foe-helper#proxyloaded'));
+	}
 	if (scripts.vendor.length == 1) {
 		scripts.vendor.splice(scripts.vendor.indexOf("once"),1);
 		window.dispatchEvent(new CustomEvent('foe-helper#vendors-loaded'));
@@ -36,6 +41,7 @@ function scriptLoaded (src, base) {
 };
 
 inject();
+
 
 function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate='') {
 	/**
@@ -47,7 +53,6 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 	 function promisedLoadCode(src, base="base") {
 		return new Promise(async (resolve, reject) => {
 			let sc = document.createElement('script');
-			sc.async = false;
 			sc.src = src;
 			if (scripts[base]) {
 				scripts[base].push(src);
@@ -62,10 +67,14 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 				this.remove();
 				reject();
 			});
+			while (!document.head && !document.documentElement) await new Promise((resolve) => {
+				// @ts-ignore
+				requestIdleCallback(resolve);
+			});
 			(document.head || document.documentElement).appendChild(sc);
 		});
 	}
-
+	
 	async function loadJsonResource(file) {
 		const response = await fetch(file);
 		if (response.status !== 200) {
@@ -73,16 +82,11 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 		}
 		return response.json();
 	}
-
+	
 	// check whether jQuery has been loaded in the DOM
 	// => Catch jQuery Loaded event
 	const jQueryLoading = new Promise(resolve => {
 		window.addEventListener('foe-helper#jQuery-loaded', evt => {
-			resolve();
-		}, {capture: false, once: true, passive: true});
-	});
-	const i18nLoaded = new Promise(resolve => {
-		window.addEventListener('foe-helper#i18n-loaded', evt => {
 			resolve();
 		}, {capture: false, once: true, passive: true});
 	});
@@ -91,12 +95,18 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 			resolve();
 		}, {capture: false, once: true, passive: true});
 	});
+	const proxyLoaded = new Promise(resolve => {
+		window.addEventListener('foe-helper#proxyloaded', evt => {
+			resolve();
+		}, {capture: false, once: true, passive: true});
+	});
 
+	
 	const v = chrome.runtime.getManifest().version + (loadBeta ? '-beta-'+ betaDate:'');
 
 	let   lng = chrome.i18n.getUILanguage();
 	const uLng = localStorage.getItem('user-language');
-
+	
 	// we only need the first part
 	if (lng.indexOf('-') > 0) {
 		lng = lng.split('-')[0];
@@ -118,12 +128,11 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 
 
 	let tid = setInterval(InjectCSS, 0);
-
 	function InjectCSS() {
 		// Document loaded
 		if(document.head !== null){
 			let MenuSetting = localStorage.getItem('SelectedMenu');
-			MenuSetting = MenuSetting ? MenuSetting : 'RightBar';
+			MenuSetting = MenuSetting ? MenuSetting : 'BottomBar';
 			let cssname = "_menu_" + MenuSetting.toLowerCase().replace("bar","");
 
 			let cssFiles = [
@@ -160,7 +169,7 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 				devMode: `${!('update_url' in chrome.runtime.getManifest())}`,
 				loadBeta: loadBeta
 			}));
-
+			
 			// Firefox does not support direct communication with background.js but API injections
 			// So the the messages have to be forwarded and this exports an API-Function to do so
 			if (window.navigator.userAgent.indexOf("Firefox") > -1 && exportFunction && window.wrappedJSObject) {
@@ -193,47 +202,35 @@ function inject (loadBeta = false, extUrl = chrome.runtime.getURL(''), betaDate=
 			// start loading both script-lists
 			const vendorListPromise = loadJsonResource(`${extUrl}js/vendor.json`);
 			const scriptListPromise = loadJsonResource(`${extUrl}js/internal.json`);
-			// load main
+			
+			// load foe-Proxy
+			await promisedLoadCode(chrome.runtime.getURL('')+`js/foeproxy.js`,"proxy");
+			scriptLoaded("primed", "proxy");
+			await proxyLoaded;
+			// load the main
 			await promisedLoadCode(`${extUrl}js/web/_main/js/_main.js`,"main");
 			scriptLoaded("primed", "main");
 			await mainLoaded;
-
+			
 			// wait for ant and i18n to be loaded
 			await jQueryLoading;
 
-			// load all vendor scripts parallel (execution order is preserved)
+			// load all vendor scripts first (unknown order)
 			const vendorScriptsToLoad = await vendorListPromise;
-			const vendorPromises = [];
 			for (let i = 0; i < vendorScriptsToLoad.length; i++){
-				vendorPromises.push(promisedLoadCode(`${extUrl}vendor/${vendorScriptsToLoad[i]}.js?v=${v}`,"vendor"));
+				await promisedLoadCode(`${extUrl}vendor/${vendorScriptsToLoad[i]}.js?v=${v}`,"vendor");
 			}
-			await Promise.all(vendorPromises);
-
+			//await Promise.all(vendorScriptsToLoad.map(vendorScript => promisedLoadCode(`${extUrl}vendor/${vendorScript}.js?v=${v}`,"vendor")));
+			
 			scriptLoaded("primed", "vendor");
-
-			// modules partly call i18n() while being parsed (e.g. menu titles), so the
-			// translations have to be in place first; don't block forever if they hang
-			await Promise.race([i18nLoaded, new Promise(resolve => setTimeout(resolve, 5000))]);
-
-			// load scripts (parallel, execution order is preserved)
+			
+			// load scripts (one after the other)
 			const internalScriptsToLoad = await scriptListPromise;
-			const internalPromises = [];
 
 			for (let i = 0; i < internalScriptsToLoad.length; i++){
-				let entry = internalScriptsToLoad[i];
-				let scriptName = typeof entry === 'string' ? entry : entry.name;
-				let parts = typeof entry === 'object' ? entry.parts : [];
-
-				internalPromises.push(promisedLoadCode(`${extUrl}js/web/${scriptName}/js/${scriptName}.js?v=${v}`, "internal"));
-
-				if (parts && parts.length > 0) {
-					for (let p of parts) {
-						internalPromises.push(promisedLoadCode(`${extUrl}js/web/${scriptName}/js/parts/${p}.js?v=${v}`, "internal"));
-					}
-				}
+				await promisedLoadCode(`${extUrl}js/web/${internalScriptsToLoad[i]}/js/${internalScriptsToLoad[i]}.js?v=${v}`, "internal");
 			}
-			await Promise.all(internalPromises);
-
+					
 			scriptLoaded("primed", "internal");
 
 		} catch (err) {

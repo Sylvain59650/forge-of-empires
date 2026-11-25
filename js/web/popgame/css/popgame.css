@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -14,8 +14,8 @@
  #Popgame {
     width: 520px;
     height: 494px;
-    top: calc(50% - 278px);
-    left: calc(50% - 260px);
+    top: calc(50% - 281px);
+    left: calc(50% - 261px);
     pointer-events: none;
 }
 #Popgame #PopgameHeader {
@@ -27,7 +27,7 @@
 #PGwrapper {
     height: 404px;
 }
-/*#PGwrapper.fall {
+#PGwrapper.fall {
     position: relative;
     top: calc(50% - 226px);
     left: calc(50% - 258px);
@@ -36,13 +36,13 @@
     position: relative;
     top: calc(50% - 225px);
     left: calc(50% - 260px);
-}*/
+}
 #PGwarning {
     width: 400px;
     display: inline-block;
     vertical-align: top;
-    text-shadow: 1px 1px var(--black);
-    color: var(--danger-red);
+    text-shadow: 1px 1px black;
+    color: orangered;
 }
 .PGtool {
     height: 50px;
@@ -53,7 +53,7 @@
     pointer-events: auto;
 }
 .PGselected {
-    border: var(--white) solid 2px;
+    border: white solid 2px;
 }
 .PGcolumn {
     display: table-cell;

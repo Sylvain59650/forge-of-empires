@@ -1,821 +1,814 @@
-/*
- * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the AGPL license.
- *
- * See file LICENSE.md or go to
- * https://github.com/mainIine/foe-helfer-extension/blob/master/LICENSE.md
- * for full license details.
- *
- * **************************************************************************************
- */
+function splitNUmber(num,start,modulo) { 
+	//if ((num+start)<modulo) return ""; 
+	if (num<start) {
+		return "";
+	}
+	let n=num-start; 
+	let mulp=Math.floor(n/modulo);
+	let rest=n-mulp*modulo; 
+	let txt=""+num+" = ";
+	if (start>0) {txt+= start;} 
+	if (mulp>0) {txt+=" + "+mulp+"x"+modulo;} 
+	if (rest>0) {txt+=" + "+rest;}; 
+	return txt;	
+}
 
-// Cost calculator ("GB Cost Calc") for contributing to great buildings.
-// It renders into its own box (#CalculatorBox) in split view or into the
-// own part calculator box (#OwnPartBox) in the combined view.
-// The settings dialog is split into js/parts/ (see js/internal.json).
+function avgFP(flottant) {
+  return Math.round(flottant);
+}
+
+function ff(num,start) { let n=num-start; let mulp=Math.floor(n/53);let rest=n-mulp*53; 
+	}
+
+FoEproxy.addFoeHelperHandler('QuestsUpdated', data => {
+	if ($('#costCalculator').length > 0) {
+		Calculator.Show();
+	}
+});
+
+FoEproxy.addHandler("GreatBuildingsService","getConstruction", (data,postData) => {
+	debugger;	
+	Calculator.Show();
+		
+});
 
 let Calculator = {
+
 	ForderBonus: 90,
-	ForderBonusIsGold: false, // the rate in memory belongs to gold tier level-ups
+    SoundFile: new Audio(extUrl + 'vendor/sounds/message.mp3'),
     PlayerName: undefined,
     LastPlayerID: 0,
-    PlayInfoSound: false,
+    PlayInfoSound: null,
+	Rankings : undefined,
+	CityMapEntity : undefined,
 	LastRecurringQuests: undefined,
 	ForderBonusPerConversation: true,
-	OwnPartClose: false,
 	DefaultButtons: [
-		80, 90, 100, 'ark'
+		80, 85, 90, 'ark'
 	],
 	ClanId: null,
 	ClanName: null,
 
 	/**
-	 * Split view: the cost calculator gets its own box instead of sharing one with the own part calculator.
+	 * Show calculator
 	 *
-	 * @returns {boolean} true if the split view is enabled
+	 * @param action
+	 * @constructor
 	 */
-	IsSplitView: () => (localStorage.getItem('CalculatorSplitView') === 'true'),
+	Show: (action = '') => {
+        // moment.js global setzen
+        //moment.locale(MainParser.Language);
 
-
-	/**
-	 * The box the calculator currently renders into.
-	 *
-	 * @returns {string} 'CalculatorBox' in split view, 'OwnPartBox' in the combined view
-	 */
-	BoxId: () => (Calculator.IsSplitView() ? 'CalculatorBox' : 'OwnPartBox'),
-
-
-	/**
-	 * localStorage key of the auto open setting: the own box has its own one in
-	 * split view, the combined box shares the own part calculator's setting.
-	 *
-	 * @returns {string} Key name
-	 */
-	AutoOpenKey: () => (Calculator.IsSplitView() ? 'CalculatorAutoOpen' : 'OwnPartAutoOpen'),
-
-
-	/**
-	 * Contribution boost column (piggy bank): show the FP bonus granted by the own
-	 * contribution boost per rank, can be hidden in the settings. Like the game the
-	 * column is always hidden without an own contribution boost.
-	 *
-	 * @returns {boolean} true if the column is visible
-	 */
-	ShowBoostColumn: () => (Calculator.ArkBonus() > 0 && localStorage.getItem('CalculatorShowBoostColumn') !== 'false'),
-
-
-	/**
-	 * Tier (copper/gold) of the shown level-up: set by lgUpdate from the tier metadata, the
-	 * overview or the rewards, otherwise from the GB overview as long as its data still
-	 * matches the current level.
-	 *
-	 * @returns {?Object} GreatBuildingTier enum, e.g. {value: 'gold'}, or null
-	 */
-	CurrentTier: () => {
-		const GB = MainParser.CurrentGB;
-
-		if (GB.Tier) return GB.Tier;
-		if (GB.OverviewRow && GB.Entity && GB.OverviewRow['level'] === GB.Entity['level']) return GB.OverviewRow['currentTier'] || null;
-
-		return null;
-	},
-
-
-	/**
-	 * Own contribution boost for the shown level-up: gold tier level-ups use the
-	 * separate gold boost, everything else the classic one.
-	 *
-	 * @returns {number} Boost in percent
-	 */
-	ArkBonus: () => MainParser.GetArkBonus(Calculator.CurrentTier()),
-
-
-	/**
-	 * localStorage keys of the friendly invest rate of the shown level-up, most
-	 * specific first: per conversation before the global one. Gold tier
-	 * level-ups have their own rate. The first key is the one a changed rate
-	 * is saved to.
-	 *
-	 * @param {boolean} [Gold] Gold tier rate, default: the tier of the shown level-up
-	 * @returns {string[]} Key names
-	 */
-	ForderBonusKeys: (Gold = MainParser.IsGoldTier(Calculator.CurrentTier())) => {
-		const PerConversation = (localStorage.getItem('CalculatorForderBonusPerConversation') !== 'false'),
-			Conversation = (PerConversation && MainParser.OpenConversation ? '_' + MainParser.OpenConversation : ''),
-			Tier = (Gold ? 'Gold' : '');
-
-		return [...new Set(['CalculatorForderBonus' + Tier + Conversation, 'CalculatorForderBonus' + Tier])];
-	},
-
-
-	/**
-	 * Saved friendly invest rate of a tier (per conversation before the global
-	 * one). The own part calculator uses it for foreign GBs, so both views
-	 * share the rate.
-	 *
-	 * @param {boolean} Gold Gold tier rate
-	 * @returns {?number} The rate in percent, null if none has been saved yet
-	 */
-	SavedForderBonus: (Gold) => {
-		const Key = Calculator.ForderBonusKeys(Gold).find(Key => localStorage.getItem(Key) !== null);
-
-		return (Key ? parseFloat(localStorage.getItem(Key)) : null);
-	},
-
-
-	/**
-	 * Shows the cost calculator for the currently opened GB: loads the settings,
-	 * creates the own box in split view when missing and renders the content
-	 * (or a hint while no GB has been opened yet).
-	 */
-	Show: () => {
-		$('.tooltip').remove();
-		Calculator.ForderBonusPerConversation = (localStorage.getItem('CalculatorForderBonusPerConversation') !== 'false');
-
-        let spk = localStorage.getItem('CalculatorTone');
-
-		if (spk === null) {
-			localStorage.setItem('CalculatorTone', 'false');
-			Calculator.PlayInfoSound = false;
-
-		} else {
-			Calculator.PlayInfoSound = (spk !== 'false');
-		}
-
-		HTML.AddCssFile('calculator');
-
-		Calculator.CurrentPlayer = parseInt(localStorage.getItem('current_player_id'));
-
-		// in split view the calculator has its own box, create it when missing
-		if (Calculator.IsSplitView() && $('#CalculatorBox').length === 0) {
-			HTML.Box({
-				id: 'CalculatorBox',
-				title: i18n('Boxes.Calculator.Title'),
-				auto_close: true,
-				dragdrop: true,
-				minimize: true,
-				settings: () => Calculator.ShowCalculatorSettings(),
-				active_maps: "main"
-			});
-
-			Calculator.RegisterBoxEvents('CalculatorBox', true);
-			Calculator.AddSplitViewButton('CalculatorBox');
-
-			// no saved position yet: offset the new box so it does not fully cover the own part box
-			if (!localStorage.getItem('CalculatorBoxCords')) {
-				let box = document.getElementById('CalculatorBox');
-				box.style.setProperty('--x', '200px');
-				box.style.setProperty('--y', '-40px');
-			}
-		}
-
-		// no GB has been opened yet
-		if (!MainParser.CurrentGB.Entity || !MainParser.CurrentGB.Rankings) {
-			$('#' + Calculator.BoxId() + 'Body').html(`<div class="text-center dark-bg p5">${i18n('Menu.Calculator.Warning')}</div>`);
+        // close at the second click
+		if ($('#costCalculator').length > 0 && action === 'menu')
+		{
+			HTML.CloseOpenBox('costCalculator');
+			
 			return;
 		}
 
-        Calculator.ShowBody();
-	},
+		Calculator.ForderBonusPerConversation = (localStorage.getItem('CalculatorForderBonusPerConversation') !== 'false');
+		Calculator.AutoOpen = true;
+        // Wenn die Box noch nicht da ist, neu erzeugen und in den DOM packen
+        if ($('#costCalculator').length === 0) {
+           /* let spk = localStorage.getItem('CalculatorTone');
 
+            if (spk === null) {
+                localStorage.setItem('CalculatorTone', 'deactivated');
+                Calculator.PlayInfoSound = false;
 
-	/**
-	 * Delegated events for the calculator content, bound once per box.
-	 * The copy handler is only needed for the standalone box, the shared box already binds its own.
-	 *
-	 * @param {string} BoxId - Id of the box the events are bound to
-	 * @param {boolean} [WithCopyHandler=false] - Also bind the quick-copy handler for FP values
-	 */
-	RegisterBoxEvents: (BoxId, WithCopyHandler = false) => {
-		let $box = $('#' + BoxId);
+            } else {
+                Calculator.PlayInfoSound = (spk !== 'deactivated');
+            }*/		
 
-		// toggle percentages
-		$box.on('click', '.btn-toggle-arc', function () {
-			$('#costFactor').val(parseFloat($(this).data('value')));
-			Calculator.SetForderBonus(parseFloat($(this).data('value')));
-		});
-
-		// the arc bonus value has been changed
-		$box.on('blur', '#costFactor', function () {
-			Calculator.SetForderBonus(parseFloat($('#costFactor').val()));
-		});
-
-		if (WithCopyHandler) {
-			// quick copy for FP values
-			$box.on('click', '.copy-fp', function (e) {
-				e.preventDefault();
-				e.stopPropagation();
-				let $this = $(this),
-					value = $this.data('copy');
-
-				if (value === undefined || value === '' || value === '-') return;
-
-				Parts.setDonation(value);
-
-				// prevent double action
-				$this.addClass('copied');
-				setTimeout(() => $this.removeClass('copied'), 800);
+            HTML.Box({
+				id: 'costCalculator',
+				title: i18n('Boxes.Calculator.Title'),
+		//		ask: i18n('Boxes.Calculator.HelpLink'),
+				auto_close: true,
+				dragdrop: true,
+				minimize: true,
+		//		speaker: 'CalculatorTone',
+		//		settings: 'Calculator.ShowCalculatorSettings()',
+				active_maps:"main",
+				onClosed: function() { console.log("closed win");DB.set("annonceInvest","");}
+				
 			});
-		}
-	},
 
+			// CSS in den DOM prügeln
+			HTML.AddCssFile('calculator');
+			Calculator.CurrentPlayer = parseInt(localStorage.getItem('current_player_id'));
 
-	/**
-	 * Saves a new friendly invest rate and re-renders the calculator. In split
-	 * view the own part box shares the rate while it shows a foreign GB, so it
-	 * is re-rendered as well (which re-renders the calculator, too).
-	 *
-	 * @param {number} Rate - Rate in percent
-	 */
-	SetForderBonus: (Rate) => {
-		Calculator.ForderBonus = Rate;
-		localStorage.setItem(Calculator.ForderBonusKeys()[0], Rate);
+	
+			// // schnell zwischen den Prozenten wechseln
+			// $('#costCalculator').on('click', '.btn-toggle-arc', function () {
+			// 	Calculator.ForderBonus = parseFloat($(this).data('value'));
+			// 	$('#costFactor').val(Calculator.ForderBonus);
+			// 	localStorage.setItem('CalculatorForderBonus', Calculator.ForderBonus);
+			// 	Calculator.Show();
+			// });
 
-		if (Calculator.IsSplitView() && Parts.ArcPercentsForeign && $('#OwnPartBox').length > 0) {
-			Parts.CalcBody(Parts.Level);
-		}
-		else {
-			Calculator.Show();
-		}
-	},
+			// // wenn der Wert des Archebonus verändert wird, Event feuern
+			// $('#costCalculator').on('blur', '#costFactor', function () {
+			// 	Calculator.ForderBonus = parseFloat($('#costFactor').val());
+			// 	localStorage.setItem('CalculatorForderBonus', Calculator.ForderBonus);
+			// 	Calculator.Show();
+			// });
 
+			// $('#costCalculator').on('click', '#CalculatorTone', function () {
 
-	/**
-	 * Adds the split view toggle button to a box title bar.
-	 *
-	 * @param {string} BoxId - Id of the box whose title bar receives the button
-	 */
-	AddSplitViewButton: (BoxId) => {
-		let btn = $('<span />')
-			.addClass('window-split')
-			.toggleClass('active', Calculator.IsSplitView())
-			.attr('title', i18n('Boxes.Calculator.SplitView'));
+			// 	let disabled = $(this).hasClass('deactivated');
 
-		// the generic pointerdown handler from HTML.Box was bound before this button existed, prevent dragging on it
-		btn.on('pointerdown', (e) => e.stopPropagation());
-		btn.on('click', () => Calculator.ToggleSplitView());
+			// 	localStorage.setItem('CalculatorTone', (disabled ? '' : 'deactivated'));
+			// 	Calculator.PlayInfoSound = !!disabled;
 
-		$('#' + BoxId + 'Buttons').prepend(btn);
-	},
+			// 	if (disabled === true) {
+			// 		$('#CalculatorTone').removeClass('deactivated');
+			// 	} else {
+			// 		$('#CalculatorTone').addClass('deactivated');
+			// 	}
+			// });
 
-
-	/**
-	 * Toggles between the combined box (auto switching content) and two separate
-	 * boxes; the choice is persisted in localStorage ('CalculatorSplitView').
-	 */
-	ToggleSplitView: () => {
-		let split = !Calculator.IsSplitView();
-
-		localStorage.setItem('CalculatorSplitView', split);
-		$('.window-split').toggleClass('active', split);
-
-		if (split) {
-			// open the calculator in its own box
-			Calculator.Show();
-		}
-		else {
-			HTML.CloseOpenBox('CalculatorBox');
-		}
-
-		// re-render or reopen the shared box, its content switching depends on the split view
-		if ($('#OwnPartBox').length > 0) {
-			Parts.CalcBody();
-		}
-		else if (!split) {
-			Parts.Show();
-		}
-	},
-
-
-	/**
-	 * Renders the calculator content into the current box: header with building,
-	 * level and owner, the arc bonus buttons and the contribution table.
-	 * Overlays a hint when the next level is locked or no street is connected.
-	 */
-	ShowBody: () => {
-		// saved rate of the conversation or the global one, for the tier of the shown level-up
-		const RateIsGold = MainParser.IsGoldTier(Calculator.CurrentTier()),
-			SavedRate = Calculator.SavedForderBonus(RateIsGold);
-
-		if (SavedRate !== null) {
-			Calculator.ForderBonus = SavedRate;
-		}
-		// nothing saved: gold tier level-ups start with the own gold contribution boost ...
-		else if (RateIsGold) {
-			Calculator.ForderBonus = MainParser.ArkBonusGold;
-		}
-		// ... copper ones keep the last rate, but never a gold one
-		else if (Calculator.ForderBonusIsGold) {
-			Calculator.ForderBonus = 90;
-		}
-		Calculator.ForderBonusIsGold = RateIsGold;
-
-		let PlayerID = MainParser.CurrentGB.Entity.player_id,
-            h = [];
-
-        // If the player has changed, then reset BuildingName/PlayerName
-		if (PlayerID !== Calculator.LastPlayerID) {
-			Calculator.PlayerName = undefined;
-			Calculator.ClanId = undefined;
-			Calculator.ClanName = undefined;
-		}
-
-		if (Calculator.PlayerName === undefined && PlayerDict[PlayerID] !== undefined) {
-			Calculator.PlayerName = PlayerDict[PlayerID]['PlayerName'];
-		}
-		if (PlayerDict[PlayerID] !== undefined && PlayerDict[PlayerID]['ClanName'] !== undefined) {
-			Calculator.ClanId = PlayerDict[PlayerID]['ClanId'];
-			Calculator.ClanName = PlayerDict[PlayerID]['ClanName'];
-		}
-
-        // BuildingName could not be loaded from the BuildingInfo
-		let BuildingName = MainParser.CityEntities[MainParser.CurrentGB.Entity['cityentity_id']]['name'];
-		let Level = (MainParser.CurrentGB.Entity.level !== undefined ? MainParser.CurrentGB.Entity.level : 0);
-		let MaxLevel = (MainParser.CurrentGB.Entity.max_level !== undefined ? MainParser.CurrentGB.Entity.max_level : 0);
-
-		// Tier (copper/gold) of the shown level-up
-		let Tier = Calculator.CurrentTier();
-		let TierBadge = GreatBuildings.TierBadge(Tier);
-
-		h.push('<div id="gbCalc"><div class="header text-center dark-bg p5">');
-		h.push('<strong><span class="building-name">' + BuildingName + '</span></strong>');
-        h.push('<p style="margin: 0 0 5px">'+ Level + ' &rarr; ' + (Level + 1) + ' &middot; ' + i18n('Boxes.Calculator.MaxLevel') + ': ' + MaxLevel + (TierBadge ? ' &middot; ' + TierBadge : '') + '</p>');
-
-		if (Calculator.PlayerName) {
-			h.push('<span class="player-name">'
-				+ `<span class="activity activity_${PlayerDict[PlayerID]['Activity']}"></span> `
-				+ MainParser.GetPlayerLink(PlayerID, Calculator.PlayerName));
-
-			if (Calculator.ClanName) {
-				h.push(`<br>${MainParser.GetGuildLink(Calculator.ClanId, Calculator.ClanName)}`);
-			}
-
-			h.push('</span></strong>');
-		}
-
-		// different arc bonus-buttons (own list for gold tier level-ups), the own arc bonus is always one of them
-		let IsGold = MainParser.IsGoldTier(Tier),
-			investmentSteps = Calculator.GetButtons('CustomCalculatorButtons', Calculator.DefaultButtons, IsGold)
-				.map(bonus => (bonus === 'ark' ? Calculator.ArkBonus() : bonus));
-
-		h.push('<div class="costFactorWrapper">');
-		if (MainParser.HasGoldTier()) h.push(Calculator.TierMarker(IsGold));
-		h.push('<div class="btn-group">');
-		investmentSteps = investmentSteps.filter((item, index) => investmentSteps.indexOf(item) === index); //Remove duplicates
-		investmentSteps.sort((a, b) => a - b);
-		investmentSteps.forEach(bonus => {
-			h.push(`<button class="btn btn-mid btn-toggle-arc ${(bonus === Calculator.ForderBonus ? 'btn-active' : '')}${(bonus === Calculator.ArkBonus() ? ' arkBonus' : '')}" data-value="${bonus}">${bonus}%</button>`);
-		});
-
-		h.push(`<span data-original-title="${i18n('Boxes.Calculator.FriendlyInvestment')} x%">  <input type="number" id="costFactor" step="0.1" min="-100" max="200" value="${Calculator.ForderBonus}"></span>`);
-
-        h.push('</div>');
-        h.push('</div>');
-		h.push('</div>');
-
-		h.push('<table id="costTableFordern" style="width:100%" class="foe-table"></table>');
-
-        // how much is missing to level up?
-		let rest = MainParser.CurrentGB.Entity['state']['forge_points_for_level_up'] - MainParser.CurrentGB.Rankings.reduce((acc,entry)=>acc+(entry?.forge_points|0),0);
-
-		h.push('<div class="text-center dark-bg p5"><em>' + i18n('Boxes.Calculator.Up2LevelUp') + ': <span id="up-to-level-up">' + HTML.Format(rest) + '</span> ' + i18n('Boxes.Calculator.FP') + '</em>');
-
-		h.push(Calculator.GetRecurringQuestsLine(Calculator.PlayInfoSound));
-
-		h.push('</div>');
-		h.push('</div>');
-
-		let $box = $('#' + Calculator.BoxId()),
-			$body = $box.find('#' + Calculator.BoxId() + 'Body');
-
-		$body.html(h.join(''));
-		$box.find('.tooltip').remove();
-
-        // level is not unlocked yet
-		if (MainParser.CurrentGB.Entity['level'] === MainParser.CurrentGB.Entity['max_level']) {
-            $body.append($('<div />').addClass('lg-not-possible').attr('data-text', i18n('Boxes.Calculator.LGNotOpen')));
-		}
-
-		// no street connection
-		else if (MainParser.CurrentGB.Entity['connected'] === undefined) {
-            $body.append($('<div />').addClass('lg-not-possible').attr('data-text', i18n('Boxes.Calculator.LGNotConnected')));
         }
 
-		Calculator.BuildTable();
+        Calculator.CalcBody();		
 	},
 
+	ShowGMForPlayer:(playerId)=>{
+	  Calculator.PlayerId=playerId;
+	  Calculator.CalcBody();
+	  Calculator.Show();
+	},
+	
 
-	/**
-	 * Calculates and renders the contribution table: for every reward rank the
-	 * costs to demand ("fordern") and to safely take the spot, the resulting
-	 * profit and the blueprint/medal rewards, colour coded by state
-	 * (profit, negative profit, level warning, taken, own contribution).
-	 */
-	BuildTable: ()=> {
-		let h = [];
-
-		let BestKurs = 999999,
-			arc = 1 + (Calculator.ArkBonus() / 100),
-			ForderArc = 1 + (Calculator.ForderBonus / 100),
-			ShowBoost = Calculator.ShowBoostColumn();
-
-        let EigenPos,
-            EigenBetrag = 0;
-
-        // Ränge durchsteppen, Suche nach Eigeneinzahlung
-		for (let i = 0; i < MainParser.CurrentGB.Rankings.length;i++) {
-			if (MainParser.CurrentGB.Rankings[i]['player']['player_id'] !== undefined && MainParser.CurrentGB.Rankings[i]['player']['player_id'] === ExtPlayerID) {
-                EigenPos = i;
-				EigenBetrag = (isNaN(parseInt(MainParser.CurrentGB.Rankings[i]['forge_points']))) ? 0 : parseInt(MainParser.CurrentGB.Rankings[i]['forge_points']);
-                break;
-            }
+	ForgetGM:()=>{
+		let player=MainParser.Players.find(x=>x.PlayerId==Calculator.PlayerId);
+		let gm=Calculator.currentGM;
+		if (player.GMS) {
+			player.GMS.splice(x=>x.BuildingName==gm.BuildingName);
 		}
-
-		let ForderStates = [],
-			SaveStates = [],
-			FPNettoRewards = [],
-			FPRewards = [],
-			BPRewards = [],
-			BPTierRewards = [], // blueprint rewards per rank split by tier: {tier, amount}[] (amount already boosted)
-			BoostRewards = [], // extra FP granted by the own contribution boost (piggy bank column)
-			MedalRewards = [],
-			ForderFPRewards = [],
-			ForderRankCosts = [],
-			SaveRankCosts = [],
-			Einzahlungen = [],
-			BestGewinn = -999999,
-			SaveLastRankCost = undefined;
-
-		for (let i = 0; i < MainParser.CurrentGB.Rankings.length; i++) {
-			let Rank,
-				CurrentFP,
-				TotalFP,
-				RestFP,
-				IsSelf = false;
-
-			if (MainParser.CurrentGB.Rankings[i]['rank'] === undefined || MainParser.CurrentGB.Rankings[i]['rank'] === -1) {
-				continue;
-			}
-			else {
-				Rank = MainParser.CurrentGB.Rankings[i]['rank'] - 1;
-			}
-
-			if (MainParser.CurrentGB.Rankings[i]['reward'] === undefined) break; // Ende der Belohnungsränge => raus
-
-			ForderStates[Rank] = undefined; // NotPossible / WorseProfit / Self / NegativeProfit / LevelWarning / Profit
-			SaveStates[Rank] = undefined; // NotPossible / WorseProfit / Self / NegativeProfit / LevelWarning / Profit
-			FPNettoRewards[Rank] = 0;
-			FPRewards[Rank] = 0;
-			BPRewards[Rank] = 0;
-			MedalRewards[Rank] = 0;
-			ForderFPRewards[Rank] = 0;
-			ForderRankCosts[Rank] = undefined;
-			SaveRankCosts[Rank] = undefined;
-			Einzahlungen[Rank] = 0;
-
-			if (MainParser.CurrentGB.Rankings[i]['reward']['strategy_point_amount'] !== undefined)
-				FPNettoRewards[Rank] = MainParser.round(MainParser.CurrentGB.Rankings[i]['reward']['strategy_point_amount']);
-
-			if (MainParser.CurrentGB.Rankings[i]['reward']['blueprints'] !== undefined)
-				BPRewards[Rank] = MainParser.round(MainParser.CurrentGB.Rankings[i]['reward']['blueprints']);
-
-			if (MainParser.CurrentGB.Rankings[i]['reward']['resources']['medals'] !== undefined)
-				MedalRewards[Rank] = MainParser.round(MainParser.CurrentGB.Rankings[i]['reward']['resources']['medals']);
-
-			FPRewards[Rank] = MainParser.round(FPNettoRewards[Rank] * arc);
-			BPRewards[Rank] = MainParser.round(BPRewards[Rank] * arc);
-			MedalRewards[Rank] = MainParser.round(MedalRewards[Rank] * arc);
-			BoostRewards[Rank] = FPRewards[Rank] - FPNettoRewards[Rank];
-
-			// Blueprints split by tier (multi-tier great buildings)
-			BPTierRewards[Rank] = (MainParser.CurrentGB.Rankings[i]['reward']['blueprintRewards'] || []).map(bp => ({
-				tier: bp['tier'],
-				amount: MainParser.round((bp['amount'] || 0) * arc)
-			}));
-			ForderFPRewards[Rank] = MainParser.round(FPNettoRewards[Rank] * ForderArc);
-
-			if (EigenPos !== undefined && i > EigenPos) {
-				ForderStates[Rank] = 'NotPossible';
-				SaveStates[Rank] = 'NotPossible';
-				continue;
-			}
-
-			if (MainParser.CurrentGB.Rankings[i]['player']['player_id'] !== undefined && MainParser.CurrentGB.Rankings[i]['player']['player_id'] === ExtPlayerID)
-				IsSelf = true;
-
-			if (MainParser.CurrentGB.Rankings[i]['forge_points'] !== undefined)
-				Einzahlungen[Rank] = MainParser.CurrentGB.Rankings[i]['forge_points'];
-
-			CurrentFP = MainParser.CurrentGB.Rankings.reduce((acc,entry)=>acc+(entry?.forge_points|0),0) - EigenBetrag;
-			TotalFP = MainParser.CurrentGB.Entity['state']['forge_points_for_level_up'];
-			RestFP = TotalFP - CurrentFP;
-
-			if (IsSelf) {
-				ForderStates[Rank] = 'Self';
-				SaveStates[Rank] = 'Self';
-
-				for (let j = i + 1; j < MainParser.CurrentGB.Rankings.length; j++) {
-					// Spieler selbst oder Spieler gelöscht => nächsten Rang überprüfen
-					if (MainParser.CurrentGB.Rankings[j]['rank'] !== undefined && MainParser.CurrentGB.Rankings[j]['rank'] !== -1 && MainParser.CurrentGB.Rankings[j]['forge_points'] !== undefined) {
-						SaveRankCosts[Rank] = MainParser.round((MainParser.CurrentGB.Rankings[j]['forge_points'] + RestFP) / 2);
-						break;
-					}
-				}
-
-				if (SaveRankCosts[Rank] === undefined)
-					SaveRankCosts[Rank] = MainParser.round(RestFP / 2); // Keine Einzahlung gefunden => Rest / 2
-
-				ForderRankCosts[Rank] = Math.max(ForderFPRewards[Rank], SaveRankCosts[Rank]);
-			}
-			else {
-				SaveRankCosts[Rank] = MainParser.round((Einzahlungen[Rank] + RestFP) / 2);
-				ForderRankCosts[Rank] = Math.max(ForderFPRewards[Rank], SaveRankCosts[Rank]);
-				ForderRankCosts[Rank] = Math.min(ForderRankCosts[Rank], RestFP);
-
-				let ExitLoop = false;
-
-				// Platz schon vergeben
-				if (SaveRankCosts[Rank] <= Einzahlungen[Rank]) {
-					ForderRankCosts[Rank] = 0;
-					ForderStates[Rank] = 'NotPossible';
-					ExitLoop = true;
-				}
-				else {
-					if (ForderRankCosts[Rank] === RestFP)
-						ForderStates[Rank] = 'LevelWarning';
-					else if (ForderRankCosts[Rank] <= ForderFPRewards[Rank])
-						ForderStates[Rank] = 'Profit';
-					else
-						ForderStates[Rank] = 'NegativeProfit';
-				}
-
-				// Platz schon vergeben
-				if (SaveRankCosts[Rank] <= Einzahlungen[Rank]) {
-					SaveRankCosts[Rank] = 0;
-					SaveStates[Rank] = 'NotPossible';
-					ExitLoop = true;
-				}
-				else {
-					if (SaveRankCosts[Rank] === RestFP)
-						SaveStates[Rank] = 'LevelWarning';
-					else if (FPRewards[Rank] < SaveRankCosts[Rank])
-						SaveStates[Rank] = 'NegativeProfit';
-					else
-						SaveStates[Rank] = 'Profit';
-				}
-
-				if (ExitLoop) {
-					continue;
-				}
-
-				// Selbe Kosten wie vorheriger Rang => nicht belegbar
-				if (SaveLastRankCost !== undefined && SaveRankCosts[Rank] === SaveLastRankCost) {
-					ForderStates[Rank] = 'NotPossible';
-					ForderRankCosts[Rank] = undefined;
-					SaveStates[Rank] = 'NotPossible';
-					SaveRankCosts[Rank] = undefined;
-					ExitLoop = true;
-				}
-				else {
-					SaveLastRankCost = SaveRankCosts[Rank];
-				}
-
-				if (ExitLoop) {
-					continue;
-				}
-
-				let CurrentGewinn = FPRewards[Rank] - SaveRankCosts[Rank];
-				if (CurrentGewinn > BestGewinn) {
-					if (SaveStates[Rank] !== 'LevelWarning')
-						BestGewinn = CurrentGewinn;
-				}
-				else {
-					SaveStates[Rank] = 'WorseProfit';
-					ForderStates[Rank] = 'WorseProfit';
-				}
-			}
-		}
-
-		h.push('<thead>' +
-			'<th>#</th>' +
-			'<th><span class="forgepoints" title="' + HTML.i18nTooltip(i18n('Boxes.Calculator.Commitment')) + '"></span></th>' +
-			'<th>' + i18n('Boxes.Calculator.Profit') + '</th>');
-			h.push('<th><span class="blueprint"' + GreatBuildings.BlueprintIconStyle(MainParser.CurrentGB.Tier) + ' title="' + HTML.i18nTooltip(i18n('Boxes.Calculator.BPs')) + '"></span></th>');
-			h.push('<th><span class="medal" title="' + HTML.i18nTooltip(i18n('Boxes.Calculator.Meds')) + '"></span></th>');
-			if (ShowBoost)
-				h.push('<th><span class="contribution-boost"' + GreatBuildings.ContributionBoostIconStyle(MainParser.CurrentGB.Tier) + ' title="' + HTML.i18nTooltip(i18n('Boxes.Calculator.Boost')) + '"></span></th>');
-		h.push('</thead>');
-
-		for (let Rank = 0; Rank < ForderRankCosts.length; Rank++) {
-			let ForderCosts = (ForderStates[Rank] === 'Self' ? Einzahlungen[Rank] : ForderFPRewards[Rank]),
-				SaveCosts = (SaveStates[Rank] === 'Self' ? Einzahlungen[Rank] : SaveRankCosts[Rank]);
-
-			let ForderGewinn = FPRewards[Rank] - ForderCosts,
-				ForderRankDiff = (ForderRankCosts[Rank] !== undefined ? ForderRankCosts[Rank] - ForderFPRewards[Rank] : 0),
-				SaveGewinn = FPRewards[Rank] - SaveCosts,
-				Kurs = (FPNettoRewards[Rank] > 0 ? MainParser.round(SaveCosts / FPNettoRewards[Rank] * 1000)/10 : 0);
-
-			if (SaveStates[Rank] !== 'Self' && Kurs > 0) {
-				if (Kurs < BestKurs) {
-					BestKurs = Kurs;
-					let BestKursNettoFP = FPNettoRewards[Rank],
-						BestKursEinsatz = SaveRankCosts[Rank];
-				}
-			}
-
-
-			let RowClass,
-				RankClass,
-				RankText = Rank + 1,
-				RankTooltip = [],
-
-				EinsatzClass = (ForderFPRewards[Rank] - EigenBetrag > StrategyPoints.AvailableFP ? 'error' : ''),
-				EinsatzText = HTML.Format(ForderFPRewards[Rank]) + Calculator.FormatForderRankDiff(ForderRankDiff), //Default: Einsatz + ForderRankDiff
-				EinsatzTooltip = [HTML.i18nReplacer(i18n('Boxes.Calculator.TTForderCosts'), { 'nettoreward': FPNettoRewards[Rank], 'forderfactor': (100 + Calculator.ForderBonus), 'costs': ForderFPRewards[Rank] })],
-
-				GewinnClass = (ForderGewinn >= 0 ? 'success' : 'error'), //Default: Grün wenn >= 0 sonst rot
-				GewinnText = HTML.Format(ForderGewinn), //Default: Gewinn
-				GewinnTooltip;
-
-			if (ForderFPRewards[Rank] - EigenBetrag > StrategyPoints.AvailableFP) {
-				EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTForderFPStockLow'), { 'fpstock': StrategyPoints.AvailableFP, 'costs': ForderFPRewards[Rank] - EigenBetrag, 'tooless': (ForderFPRewards[Rank] - EigenBetrag - StrategyPoints.AvailableFP) }));
-			}
-
-			if (ForderGewinn >= 0) {
-				GewinnTooltip = [HTML.i18nReplacer(i18n('Boxes.Calculator.TTProfit'), { 'nettoreward': FPNettoRewards[Rank], 'arcfactor': (100 + Calculator.ArkBonus()), 'bruttoreward': FPRewards[Rank], 'safe': SaveRankCosts[Rank], 'costs': ForderFPRewards[Rank], 'profit': ForderGewinn })]
-			}
-			else {
-				GewinnTooltip = [HTML.i18nReplacer(i18n('Boxes.Calculator.TTLoss'), { 'nettoreward': FPNettoRewards[Rank], 'arcfactor': (100 + Calculator.ArkBonus()), 'bruttoreward': FPRewards[Rank], 'safe': SaveRankCosts[Rank], 'costs': ForderFPRewards[Rank], 'loss': 0-ForderGewinn })]
-			}
-
-			if (ForderStates[Rank] === 'Self') {
-				RowClass = 'bg-blue';
-				RankClass = 'info';
-
-				if (Einzahlungen[Rank] < ForderFPRewards[Rank]) {
-					EinsatzClass = 'error';
-					EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTPaidTooLess'), { 'paid': Einzahlungen[Rank], 'topay': ForderFPRewards[Rank], 'tooless': ForderFPRewards[Rank] - Einzahlungen[Rank] }));
-				}
-				else if (Einzahlungen[Rank] > ForderFPRewards[Rank]) {
-					EinsatzClass = 'warning';
-					EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTPaidTooMuch'), { 'paid': Einzahlungen[Rank], 'topay': ForderFPRewards[Rank], 'toomuch': Einzahlungen[Rank] - ForderFPRewards[Rank]}));
-				}
-				else {
-					EinsatzClass = 'info';
-				}
-
-				EinsatzText = HTML.Format(Einzahlungen[Rank]);
-				if (Einzahlungen[Rank] !== ForderFPRewards[Rank])
-					EinsatzText += ' <small>(=' + HTML.Format(ForderFPRewards[Rank]) + ')</small>';
-				EinsatzText += Calculator.FormatForderRankDiff(ForderRankDiff);
-
-
-				if (ForderRankDiff > 0 && Einzahlungen[Rank] < ForderRankCosts[Rank]) {
-					EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTForderNegativeProfit'), { 'fpcount': ForderRankDiff, 'totalfp': ForderRankCosts[Rank] }));
-				}
-				else if (ForderRankDiff < 0) {
-					EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTLevelWarning'), { 'fpcount': (0 - ForderRankDiff), 'totalfp': ForderRankCosts[Rank] }));
-				}
-
-				if (ForderGewinn > 0) {
-					GewinnTooltip = [HTML.i18nReplacer(i18n('Boxes.Calculator.TTProfitSelf'), { 'nettoreward': FPNettoRewards[Rank], 'arcfactor': (100 + Calculator.ArkBonus()), 'bruttoreward': FPRewards[Rank], 'paid': Einzahlungen[Rank], 'profit': ForderGewinn })]
-				}
-				else {
-					GewinnTooltip = [HTML.i18nReplacer(i18n('Boxes.Calculator.TTLossSelf'), { 'nettoreward': FPNettoRewards[Rank], 'arcfactor': (100 + Calculator.ArkBonus()), 'bruttoreward': FPRewards[Rank], 'paid': Einzahlungen[Rank], 'loss': 0 - ForderGewinn })]
-				}
-
-				GewinnClass = 'info';
-			}
-			else if (ForderStates[Rank] === 'NegativeProfit') {
-				RowClass = 'bg-red';
-				RankClass = 'error';
-
-				EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTForderNegativeProfit'), { 'fpcount': ForderRankDiff, 'totalfp': ForderRankCosts[Rank] }));
-
-				GewinnClass = 'error';
-			}
-			else if (ForderStates[Rank] === 'LevelWarning') {
-				RowClass = 'bg-yellow';
-				RankClass = '';
-
-				EinsatzTooltip.push(i18n('Boxes.Calculator.LevelWarning'));
-
-				if (ForderRankDiff < 0) {
-					Calculator.PlaySound();
-					EinsatzTooltip.push(HTML.i18nReplacer(i18n('Boxes.Calculator.TTLevelWarning'), { 'fpcount': (0 - ForderRankDiff), 'totalfp': ForderRankCosts[Rank] }));
-				}
-
-				GewinnClass = '';
-			}
-			else if (ForderStates[Rank] === 'Profit') {
-				RowClass = 'bg-green';
-				RankClass = 'success';
-
-				Calculator.PlaySound();
-			}
-			else {
-				RowClass = 'text-grey';
-				RankClass = '';
-
-				EinsatzText = HTML.Format(ForderFPRewards[Rank]);
-
-				GewinnText = '-';
-				GewinnTooltip = [];
-			}
-
-			// no clue why this is already set above and then cleared again?!
-			// RowClass = '';
-
-			if (ForderStates[Rank] === 'NotPossible' && SaveStates[Rank] === 'NotPossible')
-				RowClass = 'text-grey';
-			else if (ForderStates[Rank] === 'Profit' && SaveStates[Rank] === 'Profit')
-				RowClass = 'bg-green';
-			else if (ForderStates[Rank] === 'WorseProfit' && SaveStates[Rank] === 'WorseProfit')
-				RowClass = 'text-grey';
-			else if (ForderStates[Rank] === 'Self' && SaveStates[Rank] === 'Self')
-				RowClass = 'bg-blue';
-			else if (ForderStates[Rank] === 'NegativeProfit' && SaveStates[Rank] === 'NegativeProfit')
-				RowClass = 'bg-red';
-			else if (ForderStates[Rank] === 'LevelWarning' && SaveStates[Rank] === 'LevelWarning')
-				RowClass = 'bg-yellow';
-
-			h.push(`<tr class="text-center ${RowClass}">
-				<td>
-					<strong class="${RankClass} td-tooltip" data-original-title="${HTML.i18nTooltip(RankTooltip.join('<br>'))}">${RankText}</strong>
-				</td>
-				<td>
-					<strong class="${EinsatzClass} td-tooltip copy-fp clickable" data-copy="${ForderFPRewards[Rank]}" data-original-title="${HTML.i18nTooltip(EinsatzTooltip.join('<br>'))}">${EinsatzText}</strong>
-				</td>
-				<td>
-					<strong class="${GewinnClass} td-tooltip copy-fp" data-copy="${ForderGewinn}" data-original-title="${HTML.i18nTooltip(GewinnTooltip.join('<br>'))}">${GewinnText}</strong>
-				</td>
-				<td> ${GreatBuildings.FormatBlueprintRewards(BPTierRewards[Rank], BPRewards[Rank])} </td>
-				<td> <small> ${HTML.Format(MedalRewards[Rank])} </small> </td>
-				${ShowBoost ? `<td> <small> ${HTML.Format(BoostRewards[Rank])} </small> </td>` : ''}
-			</tr>`);
-		}
-
-		$('#' + Calculator.BoxId()).find('#costTableFordern').html(h.join(''));
-
-		$('[data-original-title]').tooltip({
-			html: true,
-			container: 'body'
-		});
+		Calculator.CalcBody();
 	},
 
+	RememberGM:()=>{
+		let player=MainParser.Players.find(x=>x.PlayerId==Calculator.PlayerId);
+		let gm=Calculator.currentGM;
+		if (!player.GMS) {
+			player.GMS=[];
+		}
+		player.GMS.push(gm);
+		Calculator.CalcBody();
+	},
 
-	/**
-	 * Builds the "active recurring quest" line showing the FP still needed for
-	 * open FP spend/buy quests. Also used by the own part calculator, plays a
-	 * sound when the quest count changes.
-	 *
-	 * @param {boolean} PlaySound - Play a notification sound on quest changes
-	 * @returns {string} HTML string with one line per active recurring quest
-	 */
-	GetRecurringQuestsLine: (PlaySound) => {
-		let h = [],
-			RecurringQuests = 0;
-
+	
+	GetRecurringQuestsLine: () => {
+		let CurrentProgress=0;
+		let MaxProgress=0;
+		let infoType="attention";
+		let RecurringQuestString='Quete dépenser XX pf non active';
 		for (let Quest of MainParser.Quests) {
-			if (Quest.id >= 900000 && Quest.id < 1000000) {
+			if ((Quest.questGiver.id === 'scientist' && Quest.type === 'generic' && Quest.abortable === true) || Quest.id == 933010) {
 				for (let cond of Quest.successConditions) {
-					let CurrentProgress = cond.currentProgress || 0;
-					let MaxProgress = cond.maxProgress;
-					if (cond.iconType=="icon_quest_alchemie" && ((CurrentEraID <= 3 && MaxProgress >= 3) || (MaxProgress > 15 && CurrentEraID <=15) || MaxProgress>=100)) { // Unterscheidung Buyquests von UseQuests: Bronze/Eiszeit haben nur UseQuests, Rest hat Anzahl immer >15, Buyquests immer <=15
-						let RecurringQuestString;
+					CurrentProgress = cond.currentProgress !== undefined ? cond.currentProgress : 0;
+					MaxProgress = cond.maxProgress;
+					if ((CurrentEraID <= 3 && MaxProgress >= 3) || MaxProgress > 20) { // Unterscheidung Buyquests von UseQuests: Bronze/Eiszeit haben nur UseQuests, Rest hat Anzahl immer >15, Buyquests immer <=15						
 						if (MaxProgress - CurrentProgress !== 0) {
 							RecurringQuestString = HTML.Format(MaxProgress - CurrentProgress) + i18n('Boxes.Calculator.FP');
-							RecurringQuests += 1;
+							infoType="good";
 						}
 						else {
 							RecurringQuestString = i18n('Boxes.Calculator.Done');
+							infoType="attention";
 						}
-
-						h.push('<div class="rq"><em>' + i18n('Boxes.Calculator.ActiveRecurringQuest') + ' <span class="recurringquests copy-fp clickable" data-copy="'+ (MaxProgress - CurrentProgress) +'">' + RecurringQuestString + '</span></em></div>');
 					}
 				}
 			}
 		}
+		return {
+			questModulo:MaxProgress,
+			currentProgress:CurrentProgress,
+			info:RecurringQuestString,
+			infoType:infoType
+		}
+	},
 
-		if (Calculator.LastRecurringQuests !== undefined && RecurringQuests !== Calculator.LastRecurringQuests) {
-			if (PlaySound) { //Nicht durch Funktion PlaySound ersetzen!!! GetRecurringQuestLine wird auch vom EARechner aufgerufen.
-				helper.sounds.play("message");
+
+	
+	/**
+	 * The table body with all functions
+	 */
+	CalcBody: ()=> {		
+debugger;
+	//	if (!Calculator.CityMapEntity || !Investment.State) return;
+
+
+		h = [];
+
+let bb=Calculator.Rankings;
+	let currentGM={};
+	currentGM.BuildingName =(MainParser.CityEntities!=null)?MainParser.CityEntities[Calculator.CityMapEntity['cityentity_id']]['name']:"";
+	currentGM.Level = (Calculator.CityMapEntity['level'] !== undefined ? Calculator.CityMapEntity['level'] : 0);
+	currentGM.MaxLevel=(Calculator.CityMapEntity['max_level'] !== undefined ? Calculator.CityMapEntity['max_level'] : 0);
+	currentGM.OwnerId=Calculator.PlayerId;
+	currentGM.FPRequired=parseInt(Investment.State.state.forge_points_for_level_up,10);
+	if (!currentGM.FPRequired) return;
+	currentGM.FPInvests=parseInt(Investment.State.state.invested_forge_points??0,10);
+	currentGM.NextUp=parseInt(Investment.State.state.next_state_transition_at,10);
+	currentGM.Dt=new Date();
+	Calculator.currentGM=currentGM;
+
+
+	if (Investment.State){
+		if (Investment.State.player_id==Calculator.CurrentPlayer) {
+			Calculator.CalcMyInvest();
+			return;
+		}
+	}
+	Calculator.CalcSnip();
+	},
+	
+	
+
+	CalcMyInvest: ()=> {
+		let taux=1.9;
+		Calculator.CleanRankings();
+		let html=[];
+
+		let currentGM=Calculator.currentGM;
+		//currentGM.FPInvests=currentGM.FPInvests??0;
+		//let player=MainParser.Players.find(x=>x.PlayerId==currentGM.OwnerId);
+		let player=PlayerDict[currentGM.OwnerId];
+		if (player==null) {
+			player={PlayerID:0,PlayerName:""}
+		}
+		let img="";//PlayersPopin.GetPortrait(player.PlayerID);
+		let resteToInvest=Calculator.currentGM.FPRequired-Calculator.currentGM.FPInvests;
+		html.push('<img class="mini-portrait" src="'+img+'"/>');
+		html.push('<span class="player-name">' + player.PlayerName + '</span>');
+		
+		let quest=Calculator.GetRecurringQuestsLine();
+		html.push('<p class="header"><strong><span class="building-name">' + currentGM.BuildingName + '</span> <span>('+currentGM.Level+'/'+currentGM.MaxLevel+')</span>');
+		html.push('<p>FP : '+currentGM.FPInvests+' / '+ currentGM.FPRequired+' &nbsp; &nbsp;<span class="rest">Reste : '+resteToInvest+'</span> &nbsp; &nbsp; ');
+		html.push('<span class="'+quest.infoType+'">'+quest.info+'</span></p>');  
+
+		let bestReward=0;
+		let bestPlace=1;
+		let toSecure=0;
+		let secPlaces=resteToInvest;
+		let place="";
+		let toSec={pf:resteToInvest,rank:0,cl:'green',annonce:''};
+		let tauxJS=DB.get("investissementTauxs")??{t1:1.9,t2:1.9,t3:1.9,t4:1.9,t5:1.9};
+		let tauxs=[0,tauxJS.t1??1.9,tauxJS.t2??1.9,tauxJS.t3??1.9,tauxJS.t4??1.9,tauxJS.t5??1.9];
+		for(let ranking of Calculator.Rankings)
+		{
+			if (ranking.rank>=5) break;
+			if (ranking.player.is_self) continue;			
+			taux=tauxs[ranking.rank];
+			if (ranking.forge_points>=ranking.reward.strategy_point_amount*taux) {				
+				continue;
 			}
-        }
+			if (resteToInvest<ranking.reward.strategy_point_amount*taux) {				
+				continue;
+			}
+			toSec.pf=resteToInvest-ranking.reward.strategy_point_amount*taux*2;
+			if (toSec.pf<0)
+			{
+				toSec.pf=0;
+				toSec.cl='red';
+			}
+			toSec.rank=ranking.rank;
+			toSec.annonce="P"+ranking.rank+"("+ Math.round(ranking.reward.strategy_point_amount*taux)+")";
+			break;
+		}
 
-		Calculator.LastRecurringQuests = RecurringQuests;
+		let totalRewards=0;
+		let i=1;
+		for(let ranking of Calculator.Rankings)
+		{
+			if (ranking.player.is_self) continue;
+			if (i>5) break;
+			taux=tauxs[i];
+			totalRewards+=ranking.reward.strategy_point_amount*taux;
+			i++;
+		}
 
-		return h.join('');
+
+
+
+		for(let ranking of Calculator.Rankings)
+		{
+			if (ranking.forge_points<ranking.reward.strategy_point_amount*taux) {
+				bestPlace=ranking.rank;
+				toSecure=resteToInvest-ranking.reward.strategy_point_amount*taux*2;
+				break;
+			}
+		}
+		
+		
+	
+		let annonce="";
+		
+		let p1=Calculator.Rankings.find(x=>x.rank==1);
+		taux=tauxs[1];
+		let rewardP1=Math.ceil(p1.reward.strategy_point_amount*taux);
+		let secureP1=0;
+		let secure=0;
+		if (p1.forge_points<rewardP1) {
+			secureP1=resteToInvest-2*rewardP1;
+			secure=secureP1;
+			annonce='P1('+rewardP1+')';
+		}
+		taux=tauxs[2];
+		let p2=Calculator.Rankings.find(x=>x.rank==2);
+		let rewardP2=Math.ceil(p2.reward.strategy_point_amount*taux);
+		let secureP2=0;
+		if (p2.forge_points<rewardP2) {
+			secureP2=resteToInvest-2*rewardP2;
+			secure=Math.max(secureP1,secureP2);
+			if (secureP2<=secureP1) {
+				annonce+=' P2('+rewardP2+')';
+			}
+		}
+		taux=tauxs[3];
+		let p3=Calculator.Rankings.find(x=>x.rank==3);
+		let rewardP3=Math.ceil(p3.reward.strategy_point_amount*taux);
+		let secureP3=0;
+		if (p3.forge_points<rewardP3) {
+			secureP3=resteToInvest-2*rewardP3;
+			secure=Math.max(secureP1,secureP2,secureP3);
+			if (secureP3<=secureP2) {
+				annonce+=' P3('+rewardP3+')';
+			}
+		}
+		taux=tauxs[4];
+		let p4=Calculator.Rankings.find(x=>x.rank==4);
+		let rewardP4=Math.ceil(p4.reward.strategy_point_amount*taux);
+		let secureP4=0;
+		if (p4.forge_points<rewardP4) {
+			secureP4=resteToInvest-2*rewardP4;
+			secure=Math.max(secureP1,secureP2,secureP3,secureP4);
+			if (secureP4<=secureP3) {
+				annonce+=' P4('+rewardP4+')';
+			}
+		}
+		taux=tauxs[5];
+	//	debugger;
+		let p5=Calculator.Rankings.find(x=>x.rank==5);
+		let rewardP5=Math.ceil(p5.reward.strategy_point_amount*taux);
+		let secureP5=0;
+		if (p5.forge_points<rewardP5) {
+			secureP5=resteToInvest-2*rewardP5;
+			secure=Math.max(secureP1,secureP2,secureP3,secureP4,secureP5);
+			if (secureP5<=secureP4) {
+				annonce+=' P5('+rewardP5+')';
+			}
+		}
+
+		html.push('<p>ToInvest:'+Math.round(Calculator.currentGM.FPRequired-totalRewards)+' &nbsp; ,'+Math.round(100*(Calculator.currentGM.FPRequired-totalRewards)/Calculator.currentGM.FPRequired,0)  +'%</p>');
+		if (toSec.annonce!='') {
+			html.push('<p class='+toSec.cl+'>ToSecure:'+avgFP(toSec.pf)+' '+toSec.annonce+'</p>');
+		}
+		let val=[];
+		val.push(avgFP(toSec.pf));
+		MainParser.DrawComms("securePlace",val);
+		
+	  let oldValue=DB.get("annonceInvest");
+
+		html.push('<table id="costTableFordern" style="width:100%" class="foe-table">');
+		html.push('<tr><td><button style="width:15px;height:15px" id=razAnnonce title="RAZ" /><button style="width:15px;height:15px" id=copyAnnonce title="Copier annonce" /></td>');
+		html.push('<td colspan=7><textarea id=annonceTxt rows=4 cols=50>'+oldValue+'</textarea></td></tr>');
+		html.push('<tr><td><button style="width:15px;height:15px" id=copyAnnonce2 title="2 premières places" /></td>');
+		html.push('<td>Rang</td><td>Joueur</td><td>Invest</td><td>Feedback</td><td>'+taux+'</td><td>Médailles</td><td>Plans</td></tr>');	
+		
+		
+		for(let r of Calculator.Rankings) {
+			let bg="";
+			taux=tauxs[r.rank];
+			let reward=r.reward;
+			let isOk=(r.rank<5 && r.forge_points>=reward.strategy_point_amount*taux);
+			if (r.player.is_self) {
+				bg=' class="self"';
+			}
+			if (r.rank==null) {
+				html.push('<tr class="owner"><td></td><td></td><td></td><td>'+r.forge_points+'</td><td></td><td></td><td></td><td></td></tr>');
+				continue;
+			}
+			bg=isOk?' class="ok"':"";
+			html.push('<tr'+bg+'>');
+			if (r.rank<=5) {
+				let fp=Math.ceil(reward.strategy_point_amount*taux);
+				if (fp==0) fp=1;
+				let checked=(r.forge_points<fp);				
+				html.push('<td><input type=checkbox title="'+taux+'" id=ck'+r.rank+' name="ck'+r.rank+'"'+ (checked?' checked=checked':'')+' data-fp='+fp+' /></td>');			
+			}
+			else {
+				html.push('<td></td>');
+			}
+			html.push('<td>'+(r.rank??"")+'</td>');
+			if (r.forge_points>0) {
+			html.push('<td title="'+r.player.name+'">'+r.player.name.substring(0,3)+'</td>');
+			}
+			else {
+			html.push('<td></td>');				
+			}
+			html.push('<td>'+r.forge_points+'</td>');			
+						
+			// if (r.Best>0){
+			// 	let txt="";
+			// 	if (r.note.costForme>0) {
+			// 		txt='<span class="red">(+'+r.note.costForme+")</span>";
+			// 	}
+			// 	else {
+			// 		txt='<span class="green">('+r.note.costForme+")</span>";
+			// 	}
+			// 	html.push('<td class="'+r.note.cl+'">'+r.Best+txt+'</td>');
+			// }
+			// else {
+			// 	html.push('<td></td>');
+			// }
+			html.push('<td>'+reward.strategy_point_amount+'</td>');
+			html.push('<td>'+Math.ceil(reward.strategy_point_amount*taux)+'</td>');
+			html.push('<td>'+reward.resources?.medals+'</td>');
+			html.push('<td>'+reward.blueprints+'</td>');
+			
+			html.push('</tr>');
+			if (r.player.is_self && r.forge_points<=r.Best) {
+				//r.player.GMS.splice(x=>x.BuildingName==gm.BuildingName);
+			}
+		}
+		html.push("</table>");
+		$('#costCalculatorBody').html(html.join(''));
+
+		$('#razAnnonce').on('click',function(){
+			let annonceTxt=document.getElementById("annonceTxt");
+			annonceTxt.value="";
+		});
+
+
+		$('#copyAnnonce').on('click',function(){
+			let table=document.getElementById("costTableFordern");
+			let cks=table.querySelectorAll("input[type='checkbox']:checked");			
+			let annonceTxt=document.getElementById("annonceTxt");
+			let txt="";
+			if (cks.length>0) {
+				let gms=annonceTxt.value.split('\n');
+				for(let gm of gms) {
+					if (gm!="" && gm.indexOf(Calculator.currentGM.BuildingName)<=0) {
+						txt+=gm+"\n";
+					}
+				}
+				txt+=player.PlayerName.replace(" Coldwater","").replace("783","");			
+				txt+=" "+Calculator.currentGM.BuildingName;
+				let ranks="";
+				for(let ck of cks){
+					let rank=ck.id.substring(2);
+					ranks=' P'+rank+'('+ck.dataset.fp+')'+ ranks;
+				}
+				txt+=ranks;
+				txt=txt.trim()+"\n";
+				annonceTxt.value=txt;
+			}
+			else {
+			  txt=annonceTxt.value;
+			}
+			DB.set("annonceInvest",txt);
+			helper.str.copyToClipboard(txt);
+		});
+
+		$('#copyAnnonce2').on('click',function(){
+			let table=document.getElementById("costTableFordern");
+			let cks=table.querySelectorAll("input[type='checkbox']:checked");
+			let txt=player.PlayerName.replace(" Coldwater","").replace("783","");			
+			txt+=" "+Calculator.currentGM.BuildingName;
+			let ranks="";
+			let i=0;
+			for(let ck of cks){
+				let rank=ck.id.substring(2);
+				ranks=' '+rank+" "+ranks;
+				i++;
+				if (i>1) break;
+			}
+			txt+=ranks;
+			helper.str.copyToClipboard(txt);
+		});
+
+		
+	},
+
+
+	CalcSnip:()=>{
+		debugger;
+		let quest=Calculator.GetRecurringQuestsLine();
+		if (quest.infoType=="attention") {
+			//HTML.CloseOpenBox("costCalculator");
+		}
+
+		let	arc = 1 + (MainParser.ArkBonus / 100);
+	let MaxLevel = (Calculator.CityMapEntity['max_level'] !== undefined ? Calculator.CityMapEntity['max_level'] : 0);
+	
+	h.push('<div class="text-center dark-bg" style="padding:5px 0 3px;">');
+	let isRemember=false;
+	let currentGM=Calculator.currentGM;
+	let player=PlayerDict[currentGM.OwnerId];
+	if (player==null) return;
+	if (player.GMS){
+		let gm=player.GMS.find(x=>x.BuildingName==currentGM.BuildingName);
+		if (gm){
+			player.GMS.splice(x=>x.BuildingName==currentGM.BuildingName);
+			player.GMS.push(currentGM);
+			isRemember=true;
+		}			
+	}
+	let img="";//PlayersPopin.GetPortrait(player.PlayerID);
+
+	document.querySelectorAll(".gm").forEach(x=>{if (x.dataset.player==player.PlayerId) x.classList.add("selected"); else x.classList.remove("selected");})
+
+	h.push('<img class="mini-portrait" src="'+img+'"/>');
+	h.push('<span class="player-name">' + player.PlayerName + '</span>');
+	
+	h.push('<p class="header"><strong><span class="building-name">' + currentGM.BuildingName + '</span> <span>('+currentGM.Level+'/'+MaxLevel+')</span>');
+	if (isRemember) {
+		h.push(' <button onclick="Calculator.ForgetGM()">Oublier</button>');
+	}
+	else {
+		h.push(' <button onclick="Calculator.RememberGM()">Se souvenir</button>');
+	}	
+	
+	 h.push('<p>FP : '+currentGM.FPInvests+' / '+ currentGM.FPRequired+' &nbsp; &nbsp;');
+	 h.push('<span class="rest">Reste : '+(currentGM.FPRequired-currentGM.FPInvests)+'</span> &nbsp; &nbsp; ');
+	 h.push('<span class="'+quest.infoType+'">'+quest.info+'</span></p>');  
+	//h.push('<p>Récolte :'+moment.unix(currentGM.NextUp).format('HH:mm:ss')+'</p>');
+
+	// FP im Lager
+  //  h.push('<p>' + i18n('Boxes.Calculator.AvailableFP') + ': <strong class="fp-storage">' + HTML.Format(StrategyPoints.AvailableFP) + '</strong></p>');
+
+	h.push('</div>');
+
+	h.push('<div class="dark-bg costFactorWrapper">');
+
+	//h.push(i18n('Boxes.Calculator.ArkBonus') + ': ' + MainParser.ArkBonus + '%<br>');
+	
+
+	h.push('<span><strong>Arche :</strong> ' + MainParser.ArkBonus+'%</span>');
+
+	h.push('</div>');
+
+	// Tabelle zusammen fummeln
+	h.push('<table id="costTableFordern" style="width:100%" class="foe-table"></table>');
+
+	
+
+	// in die bereits vorhandene Box drücken
+	$('#costCalculator').find('#costCalculatorBody').html(h.join(''));
+	$('#costCalculator').find('.tooltip').remove();
+
+	// Stufe ist noch nicht freigeschaltet
+	if (Calculator.CityMapEntity['level'] === Calculator.CityMapEntity['max_level']) {
+		$('#costCalculator').find('#costCalculatorBody').append($('<div />').addClass('lg-not-possible').attr('data-text', i18n('Boxes.Calculator.LGNotOpen')));
+
+	}
+
+	// es fehlt eine Straßenanbindung
+	else if (Calculator.CityMapEntity['connected'] === undefined) {
+		$('#costCalculator').find('#costCalculatorBody').append($('<div />').addClass('lg-not-possible').attr('data-text', i18n('Boxes.Calculator.LGNotConnected')));
+	}
+
+		MainParser.GMscanning=(MainParser.GMscanning??0)+1;
+		if (MainParser.GMscanning>20) {
+			DB.set("GMscanningDate",new Date());
+			MainParser.GMscanning=0;
+		}
+
+
+		let myInvest=0;
+			
+		let reste= Calculator.currentGM.FPRequired-Calculator.currentGM.FPInvests;
+		let resteSur2=Math.round((reste/2)+1);
+		for(let r of Calculator.Rankings) {
+			let reward=r.reward;
+			r.forge_points=r?.forge_points??0;
+			if (!reward)
+			{
+				r.reward={strategy_point_amount:0,resources:{medals:0},blueprints:0};
+			}
+			else {
+				reward.strategy_point_amount=reward?.strategy_point_amount??0;
+				reward.resources.medals=reward?.resources?.medals??0;
+				reward.blueprints=reward?.blueprints??0;
+			}
+		}
+
+		Calculator.CleanRankings();
+
+		// suis déjà présent
+		let isPresent=false;
+		for(let r of Calculator.Rankings) {
+			if (r.player.player_id==ExtPlayerID) { isPresent=true; break;}
+		}
+		
+		for(let r of Calculator.Rankings) {
+			if (r.rank>5) break;
+			r.Best=r.forge_points+resteSur2;
+			if (r.Best>reste) {
+				//r.Best=Math.round((reste-r.forge_points)/2+r.forge_points);
+				//r.note=Calculator.CalcNote(r,arc);
+				r.Best=-1;
+			}
+			else {
+				r.Best=r.Best-Math.round((1+r.forge_points)/2);
+				r.note=Calculator.CalcNote(r,arc);
+			}
+		}
+		// 2eme passe
+		for(let r of Calculator.Rankings) {
+			if (r.rank>5) break;
+			if (r.rank==0) continue;
+			if (r.Best) {
+		//		debugger;
+				let previousRank=Calculator.Rankings.find(x=>x.rank==r.rank-1);
+				if (previousRank) {
+				if (r.Best.Cost>previousRank.forge_points) {
+					previousRank.Best=r.Best;
+					previousRank.note=Calculator.CalcNote(previousRank,arc);
+				}
+			}
+			}
+		}
+		// 3eme passe
+	//	debugger;
+		for(let r of Calculator.Rankings) {
+			if (r.rank>5) break;
+			if (r.rank==0 || r.rank==undefined) continue;
+	//		debugger;
+			let miseXplace=Calculator.Rankings.find(x=>x.rank==r.rank).forge_points;
+			let best=reste/2+miseXplace-miseXplace/2;
+			if (best>0)
+			{
+				//r.Best=Math.round(best+1);
+				break;
+			}
+		}
+
+
+		// let mise2place=Calculator.Rankings.find(x=>x.rank==2).forge_points;
+		// let best=reste/2+mise2place-mise2place/2;
+		// if (best>0)
+		// {
+		// 	r.Best=Math.round(best+1);
+		// }
+		
+
+		let bestCost=10000; 
+		let bestRank=0;
+		let bestPlusValue=10000;
+		for(let r of Calculator.Rankings) {
+			if (r.rank>5) break;
+			if (r.Best>0 && r.note.costForme<bestPlusValue) {
+				bestCost=r.Best;
+				bestRank=r.rank;
+				bestPlusValue=r.note.costForme;
+			}
+		}
+		Calculator.currentGM.Best={PlusValue:bestPlusValue,Cost:bestCost,Rank:bestRank};
+
+
+		let html=[];
+		if (bestPlusValue<10) {
+			let quest=Calculator.GetRecurringQuestsLine();
+			html.push('<tr><td colspan="6">'+splitNUmber(bestCost,quest.questModulo-quest.currentProgress,quest.questModulo)+'</td></tr>');
+		}	
+		html.push('<tr><td>Rang</td><td>Joueur</td><td>Invest</td><td>+/-</td><td>Feedback</td><td>1.9</td><td>Médailles</td><td>Plans</td></tr>');	
+		
+		
+
+		for(let r of Calculator.Rankings) {
+			let reward=r.reward;
+			let bg="";
+			let fpme="";
+			let detect19="";
+			if (r.player.is_self) {
+				bg=' class="self"';
+				fpme='('+Math.ceil(reward.strategy_point_amount*arc)+')';
+			}
+			if (r.rank==null) {
+				html.push('<tr class="owner"><td></td><td>'+r.forge_points+'</td><td></td><td colspan=5></td></tr>');
+				continue;
+			}
+			let fp19=Math.ceil(reward.strategy_point_amount*1.9);
+			if (r.forge_points>0) {				
+			 	if (r.forge_points>fp19 && reward.strategy_point_amount>0) {
+					detect19=' class="fp19plus"';
+				 }
+				 else if (r.forge_points==fp19) {
+					detect19=' class="fp19"';
+				 }
+
+			}
+			html.push('<tr'+bg+'>');
+			html.push('<td>'+(r.rank??"")+'</td>');
+			if (r.forge_points>0) {
+			html.push('<td title="'+r.player.name+'">'+r.player.name.substring(0,3)+'</td>');
+			}
+			else {
+				html.push('<td></td>');
+			}
+			html.push('<td'+detect19+'>'+r.forge_points+'</td>');			
+			
+			if (r.Best>0){
+				let txt="";
+				if (r.note.costForme>0) {
+					txt='<span class="red">(+'+r.note.costForme+")</span>";
+				}
+				else {
+					//debugger;
+					txt='<span class="green">('+r.note.costForme+")</span>";
+					let val=[];
+					val.push(bestCost);
+					if (!isPresent)
+					{
+						MainParser.DrawComms("invest",val);
+					}
+					else{
+						console.warn("je suis présent");
+					}
+				}
+				html.push('<td class="'+r.note.cl+'">'+r.Best+txt+'</td>');
+			}
+			else {
+				html.push('<td></td>');
+			}
+			html.push('<td>'+reward.strategy_point_amount+fpme+'</td>');
+			html.push('<td>'+fp19+'</td>');
+			html.push('<td>'+reward.resources?.medals+'</td>');
+			html.push('<td>'+reward.blueprints+'</td>');			
+			html.push('</tr>');
+			// if (r.player) {
+			// 	debugger;
+			// }
+			// if (r.player.is_self && r.forge_points<=r.Best) {
+			// 	//r.player.GMS.splice(x=>x.BuildingName==gm.BuildingName);
+			// }
+		}
+
+		$('#costTableFordern').html(html.join(''));
+
+	},
+	
+	CleanRankings:()=>{
+		for(let r of Calculator.Rankings) {
+			let reward=r.reward;
+			r.forge_points=r?.forge_points??0;
+			if (!reward)
+			{
+				r.reward={strategy_point_amount:0,resources:{medals:0},blueprints:0};
+			}
+			else {
+				reward.strategy_point_amount=reward?.strategy_point_amount??0;
+				reward.resources.medals=reward?.resources?.medals??0;
+				reward.blueprints=reward?.blueprints??0;
+			}
+		}
+	},
+
+	CalcNote:(ranking,arc)=>{
+	  var note={cl:"danger"};
+      let supplement=ranking.Best-ranking.reward.strategy_point_amount;
+	  note.costForme=ranking.Best-Math.round(ranking.reward.strategy_point_amount*arc)+1;
+	  if (supplement<0) {
+			note.cl="excellent";			
+	  }
+	  else if (note.costForme<0) {
+		  note.cl="good";
+	  }
+	  else if (note.cosfForme<10){
+		  note.cl="average";
+	  }	  
+	  else if( note.costForme<20){
+		  note.cl="warning";
+	  }	
+	  return note;
+
+	},
+
+	/**
+	 * Formats the course
+	 *
+	 * @param Kurs
+	 */
+	FormatKurs: (Kurs) => {
+		if (Kurs === 0) {
+			return '-';
+		}
+		else {
+			return HTML.Format(Kurs) + '%';
+		}
 	},
 
 
 	/**
-	 * Formats the +/- display next to the demand costs (if present).
+	 * Formats the +/- display next to the yield (if present)
 	 *
-	 * @param {number} ForderRankDiff - Difference between securing the rank and the demand costs
-	 * @returns {string} HTML string with the coloured difference, empty for 0
+	 * @param ForderRankDiff
 	 */
 	FormatForderRankDiff: (ForderRankDiff) => {
 		if (ForderRankDiff < 0) {
@@ -829,13 +822,105 @@ let Calculator = {
 		}
 	},
 
-
+		
 	/**
-	 * Plays the notification sound if it is enabled in the settings.
+	 * Spielt einen Sound im Calculator ab
+	 *
+	 * @returns {string}
 	 */
     PlaySound: () => {
         if (Calculator.PlayInfoSound) {
 			helper.sounds.play("message");
         }
     },
+
+
+	ShowCalculatorSettings: ()=> {
+		let c = [],
+			buttons,
+			defaults = Calculator.DefaultButtons,
+			sB = localStorage.getItem('CustomCalculatorButtons'),
+			nV = `<p class="new-row">${i18n('Boxes.Calculator.Settings.newValue')}: <input type="number" class="settings-values" style="width:30px"> <span class="btn btn-default btn-green" onclick="Calculator.SettingsInsertNewRow()">+</span></p>`;
+
+
+		if(sB)
+		{
+			// buttons = [...new Set([...defaults,...JSON.parse(sB)])];
+			buttons = JSON.parse(sB);
+
+			buttons = buttons.filter((item, index) => buttons.indexOf(item) === index); // remove duplicates
+			buttons.sort((a, b) => a - b); // order
+		}
+		else {
+			buttons = defaults;
+		}
+
+
+		buttons.forEach(bonus => {
+			if(bonus === 'ark')
+			{
+				c.push(`<p class="text-center"><input type="hidden" class="settings-values" value="ark"> <button class="btn btn-default">${MainParser.ArkBonus}%</button></p>`);
+			}
+			else {
+				c.push(`<p class="btn-group flex"><button class="btn btn-default">${bonus}%</button> <input type="hidden" class="settings-values" value="${bonus}"> <span class="btn btn-default btn-delete" onclick="Calculator.SettingsRemoveRow(this)">x</span> </p>`);
+			}
+		});
+
+		// new own button
+		c.push(nV);
+
+		c.push('<p><input id="forderbonusperconversation" class="forderbonusperconversation game-cursor" ' + (Calculator.ForderBonusPerConversation ? 'checked' : '') + ' type="checkbox"> ' + i18n('Boxes.Calculator.ForderBonusPerConversation'));
+
+		// save button
+		c.push(`<hr><p><button id="save-calculator-settings" class="btn btn-default" style="width:100%" onclick="Calculator.SettingsSaveValues()">${i18n('Boxes.Calculator.Settings.Save')}</button></p>`);
+
+		// insert into DOM
+		$('#costCalculatorSettingsBox').html(c.join(''));
+	},
+
+
+	SettingsInsertNewRow: ()=> {
+    	let nV = `<p class="new-row">${i18n('Boxes.Calculator.Settings.newValue')}: <input type="number" class="settings-values" style="width:30px"> <span class="btn btn-default btn-green" onclick="Calculator.SettingsInsertNewRow()">+</span></p>`;
+
+		$(nV).insertAfter( $('.new-row:eq(-1)') );
+	},
+
+
+	SettingsRemoveRow: ($this)=> {
+		$($this).closest('p').fadeToggle('fast', function(){
+			$(this).remove();
+		});
+	},
+
+
+	SettingsSaveValues: ()=> {
+
+    	let values = [];
+
+    	// get each visible value
+		$('.settings-values').each(function(){
+			let v = $(this).val().trim();
+
+			if(v){
+				if(v !== 'ark'){
+					values.push( parseFloat(v) );
+				} else {
+					values.push(v);
+				}
+			}
+
+			Calculator.ForderBonusPerConversation = $('.forderbonusperconversation').prop('checked');
+			localStorage.setItem('CalculatorForderBonusPerConversation', Calculator.ForderBonusPerConversation);
+		});
+
+		// save new buttons
+		localStorage.setItem('CustomCalculatorButtons', JSON.stringify(values));
+
+		$(`#costCalculatorSettingsBox`).fadeToggle('fast', function(){
+			$(this).remove();
+
+			// reload box
+			Calculator.Show();
+		});
+	}
 };

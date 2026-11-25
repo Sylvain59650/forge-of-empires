@@ -1,0 +1,21 @@
+#GMSnip #GMSnipBody {
+	overflow-x: hidden;
+	overflow-y: auto;
+	max-height: 800px;
+	margin-top: 2px;
+	width:460px;
+}
+
+
+.gm {font-size:9pt}
+
+.gm + .selected {font-size:11pt;border:1px solid greenyellow}
+
+.invest{color:lightseagreen;font-weight: bolder;}
+.neighbor { color:orangered}
+.guildmember { color:goldenrod}
+.friend { color:springgreen}
+
+.portrait{
+	max-width:40px;
+}

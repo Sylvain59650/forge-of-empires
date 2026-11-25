@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -28,8 +28,7 @@
 #eventpresents {
     top: 100px;
     left: 48%;
-    max-height: 90vh;
-    height: auto;
+    height: 400px;
 }
 
 #eventpresentsBody {
@@ -37,7 +36,7 @@
 }
 
 #eventpresentsBody img {
-    width: 26px;
+    width: 30px;
 }
 
 #eventpresentsBody img.visible {
@@ -48,14 +47,14 @@
 
 #eventpresentsBody td.icon {
     position: relative;
-    width: 26px;
+    width: 30px;
     vertical-align: top;
 }
 
 #eventpresentsBody .fragment {
     position: absolute;
-    top: 15px;
-    left: 19px;
+    top: 18px;
+    left: 20px;
 }
 
 #eventpresentsBody .fragment img {
@@ -70,18 +69,18 @@
 }
 
 #eventpresentsBody td {
-    height: 26px;
+    height: 30px;
 }
 
 #eventpresentsBody tr.visible td {
     opacity: 1;
     font-weight: bold;
-    color: var(--sunflower);
+    color: var(--text-bright);
 }
 
 #eventpresentsBody tr.used td {
-    background-color: var(--table-bg-success);
-    color: var(--success);
+    background-color: var(--background-table-success);
+    color: var(--text-success);
     font-weight: bold;
     opacity: 0.8
 }
