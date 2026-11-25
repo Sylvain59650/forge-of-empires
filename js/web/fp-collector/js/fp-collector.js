@@ -1,7 +1,7 @@
 /*
  * *************************************************************************************
  *
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -22,23 +22,22 @@ FoEproxy.addHandler('TimedSpecialRewardService', 'getTimedSpecial', (data, postD
 	}
 });
 
-// - QI
+// - QI 
 FoEproxy.addHandler('RewardService', 'collectRewardSet', (data, postData) => {
 	const d = data.responseData;
+	let event = null, 
+		notes = null;
 
-	// since game 1.340 the response does not always carry a context field
-	const rewards = d?.reward?.rewards;
-	if (!Array.isArray(rewards)) return;
+	if (d.context.toLowerCase().includes("guild_raids")) {
+		event = d.context.toLowerCase()
+	}
 
-	const context = d.context?.toLowerCase() ?? '';
-	const event = context.includes('guild_raids') ? context : null;
-
-	for (const reward of rewards) {
+	for (const reward of d.reward.rewards) {
 		if (reward.subType !== 'strategy_points') continue;
 
 		StrategyPoints.insertIntoDB({
 			event: event,
-			notes: '',
+			notes: notes ? notes : '',
 			amount: reward.amount,
 			date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 		});
@@ -47,8 +46,8 @@ FoEproxy.addHandler('RewardService', 'collectRewardSet', (data, postData) => {
 
 FoEproxy.addHandler('RewardService', 'collectReward', (data, postData) => {
 	const d = data.responseData[0][0];
-	let eventCheck = MainParser.NormalizeRewardSource(data.responseData[1]),
-		event = eventCheck,
+	let eventCheck = data.responseData[1],
+		event = data.responseData[1],
 		notes = null,
 		amount = d['amount'];
 
@@ -281,8 +280,8 @@ FoEproxy.addHandler('CityMapService', 'showAppliedBonus', (data, postData) => {
 		metaData = MainParser.CityEntities[buildingData.cityentity_id],
 		era = Technologies.getEraName(buildingData.cityentity_id, buildingData.level)
 
-		let building = CityBuildings.createBuilding(metaData, era, buildingData)
-		let FPproduction = parseFloat(Productions.getBuildingProductionByCategory(true, building, 'strategy_points').amount)
+		let building = CityMap.createNewCityMapEntity(metaData, era, buildingData)
+		let FPproduction = parseFloat(Productions.getBuildingProductionByCategory(true, building, 'strategy_points').amount) 
 		let FP = FPproduction + Math.round(FPproduction * ((Boosts.Sums.forge_points_production) / 100))
 
 		if (!FP) continue;
@@ -390,7 +389,7 @@ let FPCollector = {
 			$('#fp-collectorBody').append(
 				`<div class="dark-bg head sticky">
 					<div class="text-warning"><strong>${i18n('Boxes.FPCollector.Total')} <span id="fp-collector-total-fp"></span>${i18n('Boxes.FPCollector.FP')}</strong></div>
-					<div class="text-right"><button class="btn btn-slim" id="FPCollectorPicker">${FPCollector.formatRange()}</button></div>
+					<div class="text-right"><button class="btn btn-default btn-tight" id="FPCollectorPicker">${FPCollector.formatRange()}</button></div>
 				</div>`,
 				`<div id="fp-collectorBodyInner"></div>`
 			);

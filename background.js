@@ -1,7 +1,7 @@
 /*
  * *************************************************************************************
  *
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -17,7 +17,7 @@
 try {
 	importScripts('vendor/browser-polyfill/browser-polyfill.min.js','vendor/dexie/dexie.min.js')
 }
-catch {
+catch {	
 }
 
 // @ts-ignore
@@ -90,9 +90,6 @@ alertsDB.version(1).stores({
 			if (typeof data.expires === 'string') data.expires = Number.parseInt(data.expires);
 			if (data.expires === undefined && typeof data.datetime === 'string') data.expires = new Date(data.datetime).getTime();
 			if (typeof data.repeat  === 'string') data.repeat  = Number.parseInt(data.repeat);
-			// game timestamps may carry fractional milliseconds (e.g. lockedUntil floats)
-			if (typeof data.expires === 'number') data.expires = Math.round(data.expires);
-			if (typeof data.repeat  === 'number') data.repeat  = Math.round(data.repeat);
 			if (data.category === undefined) data.category = '';
 			if (data.tag === undefined) data.tag = '';
 			if (data.vibrate === undefined) data.vibrate = false;
@@ -108,7 +105,7 @@ alertsDB.version(1).stores({
 			if (typeof data.persistent !== 'boolean') throw 'Alert: "data.persistent" needs to be a boolean';
 			if (typeof data.tag        !== 'string')  throw 'Alert: "data.tag" needs to be a string';
 			if (typeof data.vibrate    !== 'boolean') throw 'Alert: "data.vibrate" needs to be a boolean';
-
+			
 			// copy attributes to prevent additional attributes
 			return {
 				title:   data.title,
@@ -209,30 +206,6 @@ alertsDB.version(1).stores({
 			return id;
 		}
 		/**
-		 * Displayed notifications by id. `notifications.getAll()` throws "Unknown error."
-		 * in some Chrome versions on Windows (native notifications, #3585); then no
-		 * notification is assumed so the alert can still be deleted.
-		 * @returns {Promise<Object<string, boolean>>}
-		 */
-		async function getNotifications() {
-			try {
-				return await browser.notifications.getAll() || {};
-			} catch (err) {
-				console.warn('notifications.getAll() failed', err);
-				return {};
-			}
-		}
-
-		/**
-		 * Removes alerts that expired more than a day ago: they fired (or were missed)
-		 * long ago and only pile up in the database (#3585: >1000 stale entries).
-		 * @returns {Promise<number>} number of removed alerts
-		 */
-		function cleanupExpiredAlerts() {
-			return db.alerts.where('data.expires').below(Date.now() - 24 * 60 * 60 * 1000).delete();
-		}
-
-		/**
 		 * delets an alert
 		 * @param {!number} id Alert-ID which should be deleted
 		 * @returns {Promise<void>} Alarm removed
@@ -242,7 +215,7 @@ alertsDB.version(1).stores({
 			// delete alarm-trigger
 			const alarmClearP = browser.alarms.clear(tagId);
 			// don't actually delete an alarm with notification since the user can still interact with the notification
-			const notifications = await getNotifications();
+			const notifications = await browser.notifications.getAll();
 			if (notifications[tagId]) {
 				// mark this alarm for deletion so it is deletet from the API point of view
 				await db.alerts.update(id, {delete: true});
@@ -259,7 +232,7 @@ alertsDB.version(1).stores({
 		async function cleanupAlerts() {
 			const alerts = await getAllAlerts();
 			// don't actually delete an alarm with notification since the user can still interact with the notification
-			const notifications = await getNotifications();
+			const notifications = await browser.notifications.getAll();
 			alerts.forEach(alert => {
 				const tagId = prefix + alert.id;
 				if (!notifications[tagId]) {
@@ -276,7 +249,7 @@ alertsDB.version(1).stores({
 		function triggerAlert(alert) {
 			return browser.notifications.create(
 				alert.id != null ? (prefix + alert.id) : previevId,
-				Object.assign(navigator.userAgent.indexOf("Firefox") > -1 ? {}:
+				Object.assign(navigator.userAgent.indexOf("Firefox") > -1 ? {}: 
 					{
 						requireInteraction: alert.data.persistent||false,
 						buttons: alert.data.actions
@@ -287,43 +260,10 @@ alertsDB.version(1).stores({
 						iconUrl: '/images/app128.png',
 						eventTime: alert.data.expires,
 						contextMessage: 'FoE-Helper − '+trimPrefix(alert.server, "https://")
-
+						
 					}
 				)
 			);
-		}
-
-		/**
-		 * shows the notification of an alert exactly once, no matter whether the
-		 * browser alarm or a precise page side timer got there first
-		 * @param {!number} alertId the id of the alert to fire
-		 * @returns {Promise<boolean>} true if this call fired the notification
-		 */
-		async function fireAlert(alertId) {
-			const alertData = await db.transaction('rw', db.alerts, async () => {
-				const alertData = await Alerts.get(alertId);
-				// already fired => this is the slower of the two paths, ignore it
-				if (alertData == null || alertData.triggered) return null;
-				alertData.triggered = true;
-				await db.alerts.put(alertData);
-				return alertData;
-			});
-			if (alertData == null) return false;
-
-			triggerAlert(alertData);
-			return true;
-		}
-
-		/**
-		 * fires an alert ahead of its browser alarm and drops the now obsolete alarm
-		 * @param {!number} alertId the id of the alert to fire
-		 * @returns {Promise<boolean>} true if this call fired the notification
-		 */
-		async function fireAlertNow(alertId) {
-			const fired = await fireAlert(alertId);
-			// the alarm would only produce a duplicate now
-			await browser.alarms.clear(prefix + alertId);
-			return fired;
 		}
 
 		// Alarm triggered => show Notification
@@ -333,7 +273,16 @@ alertsDB.version(1).stores({
 			const alertId = Number.parseInt(alarm.name.substring(prefix.length));
 			if (!Number.isInteger(alertId) || alertId > Number.MAX_SAFE_INTEGER || alertId < 0) return;
 
-			await fireAlert(alertId);
+			const alertData = await db.transaction('rw', db.alerts, async () => {
+				const alertData = await Alerts.get(alertId);
+				if (alertData == null) return null;
+				alertData.triggered = true;
+				await db.alerts.put(alertData);
+				return alertData;
+			});
+			if (alertData == null) return;
+
+			triggerAlert(alertData);
 		});
 
 
@@ -381,8 +330,7 @@ alertsDB.version(1).stores({
 
 		// upon start cleanup alerts which didn't get removed properly.
 		//cleanupAlerts(); // deactivated - is triggered too often and deletes correct/active alarms (it seems the background.js is unloaded/reloaded regularly and this is triggered then unintentionally)
-		cleanupExpiredAlerts().catch(err => console.warn('alert cleanup failed', err));
-
+				
 		return {
 			getValidData: getValidateAlertData,
 			/**
@@ -407,8 +355,7 @@ alertsDB.version(1).stores({
 			create: createAlert,
 			createTemp: createAlertData,
 			setData: setAlertData,
-			trigger: triggerAlert,
-			triggerNow: fireAlertNow
+			trigger: triggerAlert
 		};
 	})();
 
@@ -425,7 +372,7 @@ alertsDB.version(1).stores({
 
 		// @ts-ignore
 		//const askText = ask[lng];
-
+		
 		/*if(!isDevMode() ) browser.tabs.create({
 			url: `https://foe-helper.com/extension/update?lang=${lng}`
 		});*/
@@ -467,8 +414,8 @@ alertsDB.version(1).stores({
 
 	/**
 	 * handles internal and external extension communication
-	 * @param {any} request
-	 * @param {browser.runtime.MessageSender} sender
+	 * @param {any} request 
+	 * @param {browser.runtime.MessageSender} sender 
 	 * @returns {Promise<{ok: true, data: any} | {ok: false, error: string}>}
 	 */
 	async function handleWebpageRequests(request, sender) {
@@ -629,24 +576,6 @@ alertsDB.version(1).stores({
 							}, 5000);
 
 							return APIsuccess(true);
-						}
-
-						case 'triggerNow': { // action
-							const id = request.id;
-							if (!Number.isInteger(id)) return APIerror('malformed request: expected "id": integer');
-
-							const alert = await Alerts.get(id);
-							if (!alert || alert.server !== server || alert.playerId !== playerId) return APIsuccess(false);
-
-							// browser alarms are only accurate to roughly a minute, so an open
-							// game tab fires the alert on time and cancels the pending alarm
-							const fired = await Alerts.triggerNow(id);
-							if (fired) return APIsuccess(true);
-
-							// the alarm usually wins the race by a few ms; report its recent
-							// trigger anyway so the tab still plays the sound
-							const current = await Alerts.get(id);
-							return APIsuccess(!!current?.triggered && Math.abs(Date.now() - current.data.expires) < 60000);
 						}
 
 						case 'delete': { // action

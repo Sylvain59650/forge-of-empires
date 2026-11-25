@@ -1,52 +1,123 @@
-/*
- * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the AGPL license.
- *
- * See file LICENSE.md or go to
- * https://github.com/mainIine/foe-helfer-extension/blob/master/LICENSE.md
- * for full license details.
- *
- * **************************************************************************************
- */
-
-#quests-counter-hud {
-    position: absolute;
-    left: 0;
-    z-index: 750;
-    width: 43px;
-    top: 40px;
-
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-    font-size: 0.75rem;
-    font-weight: 400;
+#Quests {
+	top: 100px;
+	left: 100px;
+	padding: 0px 0 0 0;
+	width: 300px;
+	z-index:500;
 }
 
-#quests-counter-hud .hud-btn-gold {
-    left: 5px;
-    width: 57px;
-    height: 30px;
-    background: var(--dark-beige) url('../../x_img/quest.png') no-repeat 1px center;
-    background-size: 39%;
-    border-radius: 0 25px 25px 0;
-    border: 2px solid var(--text-darker);
-    border-left: none;
-    margin: 2px 0;
-    box-shadow: none;
+
+#Quests #QuestsBody {
+	overflow-x: hidden;
+	overflow-y: auto;
+	max-height: 800px;
+	margin-top: 2px;
 }
 
-#quests-counter-hud .hud-btn-gold #quest-counter-value {
-    width: 32px;
-    display: inline-block;
-    position: absolute;
-    left: 22px;
-    top: 10px;
-    text-align: center;
-    font-weight: bold;
-    color: var(--text-darker);
+#Quests #QuestsBody .show-entity {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
 }
 
-.quest-tooltip {
-    width: 200px !important;
+.quests {
+  margin:0;
+  padding-left:0px;
+  list-style:none;
+  font-size:smaller;
+}
+
+
+.quest {
+	color:red;
+	border:solid 1px black;
+	padding-left:0;
+}
+.ended {
+	background-color:gray;
+}
+
+.event {
+	background-color: lime;
+}
+
+.quest-quest-list{
+	background-color:yellow;
+	list-style-type: none;
+	padding-left:0;
+}
+.quest-quest-list > li {
+	width:100%;
+	display:flex;
+}
+
+.quest-cond{
+	color:white;	
+}
+
+.quest-description{
+	width:74.9%;		
+}
+
+.daily{
+	background-color:cyan !important;
+}
+
+.quest-progress{
+	width:24.99%
+}
+
+.ended > div {
+	background-color:gray !important;
+	color:black;
+}
+
+ul.nextProduction{
+  list-style-type: none;
+}
+
+
+li.allies{
+	background-color: brown !important;
+	color: white !important;
+}
+
+li.miniChallenge{
+	background-color:darkorange !important;
+	color: black !important;
+}
+
+.time{
+	width:100px;
+	min-width:100px;
+	display:inline-flex;
+}
+.quantity{
+	padding-left:50px;
+	font-weight: bolder;
+	display:inline-block;
+}
+
+a.Antique{
+  color:white;
+  font-weight: bolder;
+}
+
+.PlayerName {
+	display:inline-block;
+	width:220px;
+}
+
+.Score{
+	display:inline-block;
+	width:50px;
+}
+
+.badge{
+	background-color: aqua;
+	border-radius: 50%;
+	margin:2px;
+	padding:4px;
+	color:darkblue;
+	font-size:12pt;
 }

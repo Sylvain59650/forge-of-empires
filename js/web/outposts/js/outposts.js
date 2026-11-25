@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -36,7 +36,12 @@ let Outposts = {
 	/**
 	 * Füg eine Box in den DOM ein
 	 */
-	BuildInfoBox: ()=> {
+	Show: (visible)=>{
+	//	debugger;
+		if (!visible) {
+			HTML.CloseOpenBox('outpostConsumables');
+			return;
+		}
 
 		if( $('#outpostConsumables').length === 0 )
 		{
@@ -48,7 +53,7 @@ let Outposts = {
 				minimize: true,
 				resize: true,
 			    active_maps:"cultural_outpost"
-				// popout: () => Outposts.PopOutBox()
+				// popout: 'Outposts.PopOutBox()'
 			};
 
 			HTML.Box(args);
@@ -86,10 +91,13 @@ let Outposts = {
 				}
 			});
 
-		} else {
-			HTML.CloseOpenBox('outpostConsumables');
 		}
+	},
 
+
+	BuildInfoBox: ()=> {
+		Outposts.Show(true);
+					
 		if (Outposts.Advancements === null) {
 			let OutpostBuildings = localStorage.getItem('OutpostBuildings');
 
@@ -116,10 +124,7 @@ let Outposts = {
 
 
 	/**
-	 * Builds the content of the box: info line, one-click alerts for the running
-	 * productions and constructions, cost table of the advancements
-	 *
-	 * @returns {void}
+	 * Setzt den Inhalt der Box zusammen
 	 */
 	BuildInfoBoxContent: () => {
 		Outposts.GUINeedsUpdate = false;
@@ -221,37 +226,35 @@ let Outposts = {
 		// Kopfzeile
 
 		// summen checkbox
-		t.push('<p class="info-line"><span><label>' + i18n('Boxes.Outpost.ShowSums') + '<input type="checkbox" onclick="Outposts.asSum(this.checked)"'+(displaySums?' checked':'')+'/></label></span><span>');
+	/*	t.push('<p class="info-line"><span><label>' + i18n('Boxes.Outpost.ShowSums') + '<input type="checkbox" onclick="Outposts.asSum(this.checked)"'+(displaySums?' checked':'')+'/></label></span><span>');
 
 		// Durchlauf Informationen
 		if (currentRun) {
 			t.push(
 				HTML.i18nReplacer(i18n('Boxes.Outpost.infoLine'), {
 					runNumber: (currentRun.id||0)+1,
-					chanceX4: MainParser.round(currentRun.productionBonusProbability * 100)
+					chanceX4: Math.round(currentRun.productionBonusProbability * 100)
 				})
 			);
 		}
 
 		// Münzen und aktuelle Münz-Produktion
 		t.push(
-			'</span><span><strong>'
+			  '</span><span><strong>'
 			+ GoodsData[primaryResourceId].name + ': ' + HTML.Format(ResourceStock[primaryResourceId]||0)
 			+ '</strong> (+ '
-			+ (current5HProductionRate > 0 ? HTML.Format(MainParser.round(current5HProductionRate)) : '???')
-			+ `/5h)`
+			+ (current4HProductionRate > 0 ? HTML.Format(Math.round(current4HProductionRate)) : '???')
+			+ '/4h)'
 			+ '</span>'
 		);
 		t.push('</p>');
-
-		// collection and construction times of the settlement with their alert bells
-		t.push(MapAlerts.Box());
-
+*/
 
 		// Kosten Tabelle
 
 		t.push('<table class="foe-table">');
 
+		/*
 		// kosten für die nächste(n) Erweiterung(en)
 		if (nextTilesCosts) {
 			let i = 0;
@@ -268,7 +271,7 @@ let Outposts = {
 				} else {
 					t.push('<td>+'+i+'</td>');
 				}
-				t.push('<td></td>');
+				//t.push('<td></td>');
 
 				// Güter durchgehen
 				for (let resourceID of resourceIDs) {
@@ -286,7 +289,7 @@ let Outposts = {
 							const isPlanned = plannedTiles[tileID]===resourceID;
 							if (displayAllTiles) {
 								t.push(
-									'<td class="text-center'+(canPurchase?' text-success':'')+'">'
+									  '<td class="text-center'+(canPurchase?' text-success':'')+'">'
 									+ '<label><input type="radio" value="'+resourceID+'" name="foe_helper_'+tileID+'"'
 									+ (isPlanned?' checked':'')
 									+ '/><span>'
@@ -313,12 +316,12 @@ let Outposts = {
 				i++;
 			}
 		}
-
+*/
 
 		// Überschriften
 		t.push('<tr>');
 		t.push('<th>' + i18n('Boxes.Outpost.TitleBuildings') + '</th>');
-		t.push('<th class="text-center">' + i18n('Boxes.Outpost.TitleFree') + '</th>');
+		//t.push('<th class="text-center">' + i18n('Boxes.Outpost.TitleFree') + '</th>');
 
 		// Güter durchgehen
 		for (let resourceID of resourceIDs)
@@ -333,21 +336,13 @@ let Outposts = {
 		// Freischaltungen
 		for (let advancement of advancements) {
 			let unlocked = advancement.isUnlocked;
-
+			if (!unlocked) {
 			t.push('<tr>');
 
-			if (advancement['rewards'].length > 0) {
-				let EntityID = advancement['rewards'][0],
-					Entity = MainParser.CityEntities[EntityID];
-
-				t.push('<td>' + Entity['name'] + '</td>');
-            }
-			else{
-				t.push('<td>' + advancement.name + '</td>');
-			}
+			t.push('<td>' + advancement.name + '</td>');
 
 			// X oder Haken
-			t.push('<td class="text-center">' + (unlocked ? '&#10004;' : '&#10060;') + '</td>');
+		//	t.push('<td class="text-center">' + (unlocked ? '&#10004;' : '&#10060;') + '</td>');
 
 			let cost = advancement.requirements.resources;
 
@@ -393,17 +388,26 @@ let Outposts = {
 					resourceSumAfter = resourceSumBefore + resourceCost;
 				}
 				sums[resourceID] = resourceSumAfter;
+				//debugger;
+				// const displayVal = HTML.Format(displaySums && resourceID !== 'diplomacy' && resourceID !== goodProductionResourceId ? resourceSumAfter : resourceCost);
+				
+				// if (resourceInStock >= resourceSumAfter) {
+				// 	// Es sind genug Güter vorhanden.
+				// 	t.push('<span class="text-success">' +displayVal + '</span>' );
+				// }
+				// else {
+				// 	// Es sind nicht genug Güter vorhanden.
+				// 	t.push(displayVal + ' <small class="text-danger">' + HTML.Format(resourceInStock - resourceSumAfter) + '</small>' );
+				// }
 
-				const displayVal = HTML.Format(displaySums && resourceID !== 'diplomacy' && resourceID !== goodProductionResourceId ? resourceSumAfter : resourceCost);
 
 				if (resourceInStock >= resourceSumAfter) {
-					// Es sind genug Güter vorhanden.
-					t.push('<span class="text-success">' +displayVal + '</span>' );
+					t.push('<span class="text-success">' +HTML.Format(resourceInStock - resourceSumAfter) + '</span>' );
 				}
 				else {
-					// Es sind nicht genug Güter vorhanden.
-					t.push(displayVal + ' <small class="text-danger">' + HTML.Format(resourceInStock - resourceSumAfter) + '</small>' );
+					t.push('<small class="text-danger">' + HTML.Format(resourceInStock - resourceSumAfter) + '</small>' );
 				}
+
 
 				// Empfehlung für Diplomatie
 				if (resourceID === 'diplomacy') {
@@ -439,6 +443,7 @@ let Outposts = {
 			}
 
 			t.push('</tr>');
+			}
 		}
 
 		// Extra Tiles
@@ -459,7 +464,7 @@ let Outposts = {
 			if (found) {
 				t.push('<tr class="total-row">');
 
-				t.push('<td><strong>' + i18n('Boxes.Outpost.ExpansionsSum') + '</strong></td><td></td>');
+				t.push('<td><strong>' + i18n('Boxes.Outpost.ExpansionsSum') + '</strong></td>');
 
 				for (let resourceID of resourceIDs) {
 					const resourceCost = plannedTilesCostSum[resourceID];
@@ -499,7 +504,7 @@ let Outposts = {
 		// Benötigt
 		t.push('<tr class="total-row">');
 
-		t.push('<td>' + i18n('Boxes.Outpost.DescRequired') + '</td><td></td>');
+		t.push('<td>' + i18n('Boxes.Outpost.DescRequired') + '</td>');
 
 		for (let resourceID of resourceIDs) {
 			t.push('<td class="text-center">' + HTML.Format(sums[resourceID]) + '</td>');
@@ -510,7 +515,7 @@ let Outposts = {
 		// Vorhanden
 		t.push('<tr class="resource-row">');
 
-		t.push('<td>' + i18n('Boxes.Outpost.DescInStock') + '</td><td></td>');
+		t.push('<td>' + i18n('Boxes.Outpost.DescInStock') + '</td>');
 
 		for (let resourceID of resourceIDs) {
 			t.push('<td class="text-center">' + HTML.Format(currStock[resourceID]) + '</td>');
@@ -522,25 +527,15 @@ let Outposts = {
 		// Überschuss/Fehlt
 		t.push('<tr class="total-row">');
 
-		t.push('<td><strong>' + i18n('Boxes.Outpost.DescStillMissing') + '</strong></td><td colspan=""></td>');
+		t.push('<td><strong>' + i18n('Boxes.Outpost.DescStillMissing') + '</strong></td>');
 
 		for (let resourceID of resourceIDs) {
 			let difference = currStock[resourceID] - sums[resourceID];
-			let difference2 = null;
-			if (currentRun) {
-				difference2 = (resourceID !== goodProductionResourceId) ? Math.floor((difference)/(1 + 3*currentRun.productionBonusProbability)) : currStock[resourceID] - Math.floor((sums[resourceID])/(1 + 3*currentRun.productionBonusProbability));
-			}
-			t.push('<td class="text-center text-' + (difference < 0 ? 'danger' : 'success') + ((resourceID !== 'diplomacy' && difference < 0 && difference2 != null) ? '" title="' + HTML.Format(difference2) + " " + i18n('Boxes.Outpost.including4x'): '') + '">' + HTML.Format(difference) + '</td>');
-
+			t.push('<td class="text-center text-' + (difference < 0 ? 'danger' : 'success') + '">' + HTML.Format(difference) + '</td>');
 		}
 
 		t.push('</tr>');
 
-		t.push('<tr>');
-		t.push('<td colspan="8" class="text-right">');
-		t.push(`<button class="btn" onclick="Outposts.SubmitData()">${i18n('Boxes.CityMap.OutpostSubmit')}</button>`);
-		t.push('</td>');
-		t.push('</tr>');
 
 		t.push('</table>');
 
@@ -561,20 +556,15 @@ let Outposts = {
 		/** @type {number} */
 		let LastStartedTime = 0;
 
-		// pick the most recently started outpost
-		let currentOutpost = null;
-		for (const outpost of outposts) {
-			if (outpost.startedAt !== undefined && outpost.startedAt > LastStartedTime) {
-				LastStartedTime = outpost.startedAt;
-				currentOutpost = outpost;
-			}
-		}
+		let currentOutpost = outposts.find(
+			outpost => outpost.startedAt !== undefined && outpost.startedAt > LastStartedTime
+		);
 
 		if (currentOutpost) {
 			let OldOutpostType = localStorage.getItem('OutpostType'),
 				NewOutpostType = currentOutpost.content;
 
-			if (OldOutpostType === null || OldOutpostType !== NewOutpostType) {
+			if (OldOutpostType === undefined || OldOutpostType !== NewOutpostType) {
 				localStorage.setItem('OutpostType', NewOutpostType);
 				localStorage.removeItem('OutpostBuildings'); //Typ des Außenpostens hat sich geändert => Gebäude löschen => führt dazu, dass Button erst nach dem Besuch des Außenpostens grün wird
 				Outposts.Advancements = null;
@@ -598,7 +588,7 @@ let Outposts = {
 	 * @returns {void}
 	 */
 	CollectResources: () => {
-		if (Outposts.OutpostData === null) return; // Kein Außenposten aktiv
+		if (Outposts.OutpostData === null) return; //Kein Außenposten aktiv
 		Outposts.RequestGUIUpdate();
 	},
 
@@ -659,24 +649,7 @@ let Outposts = {
 	},
 
 
-	SubmitData: () => {
-		let apiToken = localStorage.getItem('ApiToken');
-
-		if(apiToken === null) {
-			HTML.ShowToastMsg({
-				head: i18n('Boxes.CityMap.MissingApiKeyErrorHeader'),
-				text: [
-					i18n('Boxes.CityMap.MissingApiKeySubmitError'),
-					`<a target="_blank" href="${i18n('Settings.ApiTokenUrl')}">${i18n('Settings.ApiTokenUrl')}</a>`
-				],
-				type: 'error',
-				hideAfter: 10000,
-				show: true, // the user clicked something - show it even with notifications switched off
-			});
-
-			return;
-		}
-
+	/*SubmitData: () => {
 		let currentDate = new Date(),
 			d = {
 				time: currentDate.toISOString().split('T')[0] + ' ' + currentDate.getHours() + ':' + currentDate.getMinutes() + ':' + currentDate.getSeconds(),
@@ -684,18 +657,14 @@ let Outposts = {
 					name: ExtPlayerName,
 					id: ExtPlayerID,
 					world: ExtWorld,
-					avatar: ExtPlayerAvatar,
-					avatarUrl: srcLinks.GetPortrait(ExtPlayerAvatar),
-					era: CurrentEra,
-					era_id: CurrentEraID
+					avatar: ExtPlayerAvatar
 				},
-				apiToken: apiToken,
 				type: localStorage.getItem('OutpostType'),
 				eras: Technologies.Eras,
-				entities: CityMap.removeDoubleUnderscoreKeys(Outposts.CityMap['entities']),
-				areas: CityMap.removeDoubleUnderscoreKeys(Outposts.CityMap['unlocked_areas']),
-				blockedAreas: CityMap.removeDoubleUnderscoreKeys(Outposts.CityMap['blocked_areas']),
-				allEntities: CityMap.removeDoubleUnderscoreKeys(Outposts.Advancements)
+				entities: Outposts.CityMap['entities'],
+				areas: Outposts.CityMap['unlocked_areas'],
+				blockedAreas: Outposts.CityMap['blocked_areas'],
+				allEntities: Outposts.Advancements
 			};
 
 		MainParser.send2Server(d, 'CityPlanner', function(resp){
@@ -709,37 +678,23 @@ let Outposts = {
 						'<a target="_blank" href="https://foe-helper.com/citymap/overview">foe-helper.com</a>'
 					],
 					type: 'success',
-					hideAfter: 10000,
+					hideAfter: 1000,
 				});
-
-				// nicht-kritische Serverfehler (Cache-Dateien, Avatar, ...) trotzdem anzeigen
-				if (Array.isArray(resp['warnings']) && resp['warnings'].length > 0) {
-					HTML.ShowToastMsg({
-						head: i18n('Boxes.CityMap.SubmitErrorHeader'),
-						text: resp['warnings'].join('<br>'),
-						type: 'warning',
-						hideAfter: 15000,
-					});
-				}
 			}
 			else {
 				HTML.ShowToastMsg({
 					head: i18n('Boxes.CityMap.SubmitErrorHeader'),
-					text: resp['msg'] || 'Unknown server error',
+					text: [
+						i18n('Boxes.CityMap.SubmitError'),
+						'<a href="https://github.com/mainIine/foe-helfer-extension/issues" target="_blank">Github</a>'
+					],
 					type: 'error',
-					hideAfter: 10000,
+					hideAfter: 1000,
 				});
 			}
-		}, function(errMsg){
-			HTML.ShowToastMsg({
-				head: i18n('Boxes.CityMap.SubmitErrorHeader'),
-				text: errMsg,
-				type: 'error',
-				hideAfter: 10000,
-			});
 		});
 	},
-
+*/
 
 	PopOutBox: ()=> {
 		/*
@@ -762,7 +717,6 @@ let Outposts = {
 								<link rel="stylesheet" href="${extUrl}css/web/variables.css">
 								<link rel="stylesheet" href="${extUrl}css/web/boxes.css">
 								<link rel="stylesheet" href="${extUrl}css/web/goods.css">
-								<style id="goods-sprite-css">${localStorage.getItem('GoodsSpriteCSS') || ''}</style>
 								<link rel="stylesheet" href="${extUrl}js/web/outposts/css/outposts.css">
 							</head>
 							<body class="popup-body" id="outpostConsumablesBody">${content}</body>
@@ -794,6 +748,7 @@ FoEproxy.addHandler('OutpostService', 'getAll', (/** @type {FoE_NETWORK_OutpostS
 	// store all informations in case of outpost change
 	Outposts.OutpostsData = data.responseData;
 	Outposts.UpdateOutpostData();
+	HTML.CloseOpenBox('outpostConsumables');
 });
 
 
@@ -860,6 +815,8 @@ FoEproxy.addHandler('CityMapService', 'getCityMap', (/** @type {FoE_NETWORK_City
 	{
 		Outposts.CityMap = data.responseData;
 		Outposts.RequestGUIUpdate();
+		Outposts.BuildInfoBox();
+		Outposts.Show(true);
 	}
 });
 

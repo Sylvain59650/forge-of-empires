@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -53,7 +53,6 @@ FoEproxy.addHandler('CityProductionService', 'pickupProduction', (data, postData
 let Unit = {
 
 	CoordsRaw: [],
-	CoordsLoading: null,
 
 	Types: null,
 	Attack : null,
@@ -92,7 +91,7 @@ let Unit = {
 				dragdrop: true,
 				resize: true,
 				minimize: true,
-				settings: () => Unit.ShowSettings()
+				settings: 'Unit.ShowSettings()'
 			};
 
 			HTML.Box(args);
@@ -106,33 +105,13 @@ let Unit = {
 	},
 
 
-	/**
-	 * Builds the CSS for the unit icon sprite once; loads the sprite sheet
-	 * definition from the game CDN, as the game client no longer requests it
-	 *
-	 * @returns {Promise<void>}
-	 */
-	PrepareCoords: async () => {
-		if ($('#unit-css-block').length > 0) {
+	PrepareCoords: ()=> {
+		if( $('#unit-css-block').length > 0){
 			return;
 		}
 
-		if (Object.keys(Unit.CoordsRaw).length === 0) {
-			Unit.CoordsLoading ??= fetch(srcLinks.get('/shared/unit_portraits/armyuniticons_50x50/armyuniticons_50x50_0.json', true))
-				.then(response => response.json())
-				.catch(err => {
-					console.error('Unit: failed to load the unit icon sprite sheet', err);
-					return null;
-				});
-
-			const data = await Unit.CoordsLoading;
-			Unit.CoordsLoading = null;
-
-			if (!data?.frames || $('#unit-css-block').length > 0) {
-				return;
-			}
-
-			Unit.CoordsRaw = data;
+		if(Object.keys(Unit.CoordsRaw).length === 0){
+			return;
 		}
 
 		let s = [],
@@ -155,7 +134,7 @@ let Unit = {
 
 		let sheet = document.createElement('style')
 		sheet.id = 'unit-css-block';
-		sheet.textContent = s.join('');
+		sheet.innerHTML = s.join('');
 		document.head.appendChild(sheet);
 	},
 
@@ -237,7 +216,7 @@ let Unit = {
 
 			let AttackBoost = Boosts['AttackAttackBoost'],
 				DefenseBoost = Boosts['AttackDefenseBoost']
-
+			
 			let Attack = MainParser.round(type['baseDamage'] * (AttackBoost / 100)) + type['baseDamage'],
 				Defense = MainParser.round(type['baseArmor'] * (DefenseBoost / 100)) + type['baseArmor'];
 
@@ -413,7 +392,7 @@ let Unit = {
 			if(eras[era] === undefined){
 				eras[era] = [];
 			}
-
+						
 			eras[era].push({
 				id: c[i]['unitTypeId'],
 				name: d['name'],
@@ -483,7 +462,7 @@ let Unit = {
 		h.push( Unit.GetTabs() );
 		h.push( Unit.GetTabContent() );
 		h.push('</div>');
-
+		
 
 		$('#UnitOverview').find('#UnitOverviewBody').html( h.join('') ).promise().done(function(){
 			Unit.BuildTimer();
@@ -563,19 +542,17 @@ let Unit = {
 	 * @constructor
 	 */
 	RefreshAlca: (data) => {
-		const updated = (data && Array.isArray(data['updatedEntities']) ? data['updatedEntities'].find(e => e && e['cityentity_id'] === 'X_ProgressiveEra_Landmark1') : null);
-
-		// the city map entries are replaced on every update, so never keep an old copy:
-		// after a pickup the old one still says "production finished"
-		Unit.alca = updated || Object.values(MainParser.CityMapData).find(obj => (obj['cityentity_id'] === 'X_ProgressiveEra_Landmark1'));
+		if (!Unit.alca) {
+			Unit.alca = Object.values(MainParser.CityMapData).find(obj => (obj['cityentity_id'] === 'X_ProgressiveEra_Landmark1'))
+		}
 
 		// update next harvest time if pickup
-		if (updated && updated['state'])
+		if (data && data['updatedEntities'] && data['updatedEntities'][0] && data['updatedEntities'][0]['cityentity_id'] === 'X_ProgressiveEra_Landmark1')
 		{
-			Unit.NextHarvest = updated['state']['next_state_transition_at'];
+			Unit.NextHarvest = data['updatedEntities'][0]['state']['next_state_transition_at'];
 			Unit.BuildTimer();
 		}
-	},
+    },
 
 
 	/**
@@ -621,7 +598,7 @@ let Unit = {
 
 	/**
 	 * Updates the display for the Alcatraz production
-	 *
+	 * 
 	 */
 	UpdateAlcaLable:(countDownDate, intervalID)=>{
 		if(countDownDate.isValid())
@@ -837,7 +814,7 @@ let Unit = {
 	*
 	*/
 	LoadSettings: () => {
-		let cachedSettings = JSON.parse(localStorage.getItem('UnitOverviewSettings')) || Unit.Settings;
+		cachedSettings = JSON.parse(localStorage.getItem('UnitOverviewSettings')) || Unit.Settings;
 		Unit.Settings.pictogramScaling = (cachedSettings && cachedSettings.pictogramScaling !== undefined) ? cachedSettings.pictogramScaling : Unit.Settings.pictogramScaling;
 	},
 
@@ -848,15 +825,15 @@ let Unit = {
 		let h = [];
 
 		h.push(`<p>${i18n('Boxes.Units.PictogramScalingTitle')}
-					<button class="btn btn-slim btn-set-value" data-value="-1">&lt;</button>
+					<button class="btn btn-default btn-tight btn-set-value" data-value="-1">&lt;</button>
 					<input type="number" id="pictogramScaling" step="1" min="1" max="4" placeholder="1-4" required value="${Unit.Settings.pictogramScaling}" title="${HTML.i18nTooltip(i18n('Boxes.Units.PictogramScalingDesc'))}">
-					<button class="btn btn-slim btn-set-value" data-value="1">&gt;</button>
+					<button class="btn btn-default btn-tight btn-set-value" data-value="1">&gt;</button>
 					<span class="validity"></span>
 				</p>`);
-		h.push(`<p><button onclick="Unit.SaveSettings()" id="unit-save-settings" class="btn" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
+		h.push(`<p><button onclick="Unit.SaveSettings()" id="unit-save-settings" class="btn btn-default" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
 
 		$('#UnitOverviewSettingsBox').html(h.join(''));
-
+		
 		$('#UnitOverviewSettingsBox').on('click', '.btn-set-value', function () {
 			let value = parseFloat($('#pictogramScaling').val()) + parseFloat($(this).data('value'));
 			if (value !== value) value = 1; //NaN => 1

@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -75,18 +75,6 @@ let StrategyPoints = {
 		});
 
 		StrategyPoints.db.open();
-
-		// prestige update (11/2026): reward sources arrive in snake_case, rename them back to the stored legacy names
-		const renameFlag = 'RewardSourceRename_' + FP_DBName;
-		if (localStorage.getItem(renameFlag)) return;
-		try {
-			await StrategyPoints.db.ForgePointsStats
-				.filter(r => MainParser.NormalizeRewardSource(r.event) !== r.event)
-				.modify(r => { r.event = MainParser.NormalizeRewardSource(r.event); });
-			localStorage.setItem(renameFlag, 'done');
-		} catch (e) {
-			console.error(e);
-		}
 	},
 
 
@@ -161,7 +149,7 @@ let StrategyPoints = {
 				$bar.append(`<span />`);
 				if (i === 9) { $('.fp-bar-main').addClass('full'); break; }
 			}
-
+			
 		}, 800);
 
 	},
@@ -192,10 +180,10 @@ let StrategyPoints = {
 		}
 
 		if($('div.buyable-fp').length === 0) {
-			$('#fp-bar').append(`<div class="buyable-fp" title="${HTML.i18nTooltip(i18n('StrategyPoints.BuyableFP'))}">${ HTML.Format(amount)}</div>`);
+			$('#fp-bar').append(`<div class="buyable-fp" title="${HTML.i18nTooltip(i18n('StrategyPoints.BuyableFP'))}"><div>${ HTML.Format(amount)}</div></div>`);
 
 		} else {
-			$('div.buyable-fp').text(HTML.Format(amount));
+			$('div.buyable-fp div').text(HTML.Format(amount));
 		}
 	},
 
@@ -212,7 +200,7 @@ let StrategyPoints = {
 			let div = $('<div />').attr({
 				id: 'fp-bar',
 				class: `game-cursor ${ActiveMap}`
-			}).append( `<div class="fp-storage">0</div>` );
+			}).append( `<div class="fp-storage"><div>0</div></div>` );
 
 			$('body').append(div);
 			StrategyPoints.HandleWindowResize();
@@ -223,7 +211,7 @@ let StrategyPoints = {
 		let delimiter = Number(1000).toLocaleString().substring(1,2);
 
 		// the animation function checks if start_value != end_value
-		$('#fp-bar div.fp-storage').easy_number_animate({
+		$('#fp-bar div.fp-storage div').easy_number_animate({
 			start_value: old,
 			end_value: StrategyPoints.InventoryFP,
 			delimiter: delimiter,

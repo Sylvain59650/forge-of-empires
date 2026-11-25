@@ -1,7 +1,7 @@
 /*
  * *************************************************************************************
  *
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -40,30 +40,29 @@ let Market = {
     Trades: [],
     Offer: 0,
     Need: 0,
-    MinQuantity: 1,
-    MaxResults: 100,
-    OnlyAffordable: false,
-    NeededForResearch: false,
+    MinQuantity: 10,
+    MaxResults: 500,
+    OnlyAffordable: true,
 
-    TradePartnerNeighbor: true,
-    TradePartnerGuild: true,
-    TradePartnerFriend: true,
-    ShowOwnOffers: false,
+    TradePartnerNeighbor : false,
+    TradePartnerGuild : true,
+    TradePartnerFriend: false,
 
     TradeForHigher: true,
-    TradeForEqual: true,
-    TradeForLower: true,
+    TradeForEqual: false,
+    TradeForLower: false,
+
+    TradeForPlayerAgeHigher:true,
 
     TradeAdvantage: true,
-    TradeFairStock: true,
-    TradeFair: true,
+    TradeFairStock: false,
+    TradeFair: false,
     TradeDisadvantage: false,
 
 	OfferSelect: null,
-    NeedSelect: null,
+	NeedSelect: null,
 
-    ScrollPositions: [],
-
+    ErePlayer:1,
 
 	/**
 	 * Create a div-box for the DOM + Eventlistener
@@ -78,7 +77,7 @@ let Market = {
                 dragdrop: true,
                 minimize: true,
                 resize: true,
-                settings: () => Market.ShowSettingsButton()
+                settings: 'Market.ShowSettingsButton()'
             });
 
             // add css to DOM
@@ -98,14 +97,14 @@ let Market = {
 
 
             $('#Market').on('blur', '#minquantity', function () {
-                Market.MinQuantity = parseFloat($('#minquantity').val());
+                Market.MinQuantity = parseFloat($('#minquantity').val());              
                 Market.CalcBody();
             });
 
-            $('#Market').on('blur', '#maxresults', function () {
-                Market.MaxResults = parseFloat($('#maxresults').val());
-                Market.CalcBody();
-            });
+            // $('#Market').on('blur', '#maxresults', function () {
+            //     Market.MaxResults = parseFloat($('#maxresults').val());
+            //     Market.CalcBody();
+            // });
 
             $('#Market').on('click', '.tradepartnerneighbor', function () {
                 Market.TradePartnerNeighbor = !Market.TradePartnerNeighbor;
@@ -166,11 +165,6 @@ let Market = {
                 Market.OnlyAffordable = !Market.OnlyAffordable;
                 Market.CalcBody();
             });
-
-            $('#Market').on('change', '.neededforresearch', function () {
-                Market.NeededForResearch = !Market.NeededForResearch;
-                Market.CalcBody();
-            });
         }
         else if (event) {
             Market.CalcBody();
@@ -190,24 +184,17 @@ let Market = {
     CalcBody: () => {
         let h = [];
 
-        // Cache für die Forschungsbedarfs-Güter; wird in TestFilter ausgewertet.
-        Market._NeededResearchGoodsCache = Market.NeededForResearch
-            ? Technologies.GetNeededResearchGoods()
-            : null;
-
         // Filters
         h.push('<div class="dark-bg" style="margin-bottom: 3px;">');
-        h.push('<div style="float:right" class="text-right p5"><span class="btn" onclick="MarketOffers.Show(false)">'+i18n('Boxes.MarketOffers.Title')+'</span><br>');
-        h.push('<span class="btn my-5" onclick="MarketOffers.ShowEvents(false)">'+i18n('Boxes.MarketOffers.Events') +'</span></div>');
         h.push('<table class="filters">');
-        h.push('<thead class="sticky">');
-        h.push('<tr>');
-        h.push('<th colspan="2"></td>');
-        h.push('<th class="text-left">' + i18n('Boxes.Market.TradePartner') + '</th>');
-        h.push('<th class="text-left">' + i18n('Boxes.Market.TradeForGoods') + '</th>');
-        h.push('<th class="text-left">' + i18n('Boxes.Market.Rating') + '</th>');
-        h.push('</tr>');
-        h.push('</thead>');
+        // h.push('<thead>');
+        // h.push('<tr>');
+        // h.push('<th colspan="2"></td>');
+        // h.push('<th>' + i18n('Boxes.Market.TradePartner') + '</th>');
+        // h.push('<th>' + i18n('Boxes.Market.TradeForGoods') + '</th>');
+        // h.push('<th>' + i18n('Boxes.Market.Rating') + '</th>');
+        // h.push('</tr>');
+        // h.push('</thead>');
 
         h.push('<tr>');
         h.push('<td>' + i18n('Boxes.Market.Offer') + '</td>');
@@ -290,7 +277,28 @@ let Market = {
 					</div>
 				</div>`);
         h.push('</td>');
+      
+       //h.push('<td><label class="game-cursor" for="minquantity">' + i18n('Boxes.Market.MinQuantity') + '</label></td>');
+        h.push('<td title="' + i18n('Boxes.Market.TTMinQuantity') + '"><input type="number" id="minquantity" step="1" min="0" max="1000000" value="' + Market.MinQuantity + '"></td>');
+        h.push('</tr>');
 
+        h.push("</table><table>");
+       
+        //h.push('<tr>');
+       // h.push('<td><label class="game-cursor" for="maxresults">' + i18n('Boxes.Market.MaxResults') + '</label></td>');
+        //h.push('<td><input type="number" id="maxresults" step="1" min="1" max="1000000" value="' + Market.MaxResults + '"></td>');
+        // h.push('<td></td>');
+        // h.push('<td></td>');
+        // h.push('<td><label class="game-cursor"><input class="tradedisadvantage game-cursor" ' + (Market.TradeDisadvantage ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradeDisadvantage') + '</label></td>');
+        //h.push('</tr>');
+
+        h.push('<tr>');
+        h.push('<td><label class="game-cursor"><input class="tradepartnerneighbor game-cursor" ' + (Market.TradePartnerNeighbor ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradePartnerNeighbor') + '</label></td>');
+        h.push('<td><label class="game-cursor"><input class="tradeforhigher game-cursor" ' + (Market.TradeForHigher ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradeForHigher') + '</label></td>');
+        h.push('<td><label class="game-cursor"><input class="tradeadvantage game-cursor" ' + (Market.TradeAdvantage ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradeAdvantage') + '</label></td>');
+        h.push('</tr>');
+
+        h.push('<tr>');
         h.push('<td><label class="game-cursor"><input class="tradepartnerguild game-cursor" ' + (Market.TradePartnerGuild ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradePartnerGuild') + '</label></td>');
         h.push('<td><label class="game-cursor"><input class="tradeforequal game-cursor" ' + (Market.TradeForEqual ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.TradeForEqual') + '</label></td>');
         h.push('<td><label class="game-cursor"><input class="tradefairstock game-cursor" ' + (Market.TradeFairStock ? 'checked' : '') + ' type="checkbox" title="' + HTML.i18nTooltip(i18n('Boxes.Market.TradeFairStockTT')) + '">' + i18n('Boxes.Market.TradeFairStock') + '</label></td>');
@@ -314,7 +322,9 @@ let Market = {
 
         h.push('<tr>');
         h.push('<td colspan="2"><label class="game-cursor"><input class="onlyaffordable game-cursor" ' + (Market.OnlyAffordable ? 'checked' : '') + ' type="checkbox">' + i18n('Boxes.Market.OnlyAffordable') + '</label></td>');
-        h.push('<td colspan="3"><label class="game-cursor"><input class="neededforresearch game-cursor" ' + (Market.NeededForResearch ? 'checked' : '') + ' type="checkbox" title="' + HTML.i18nTooltip(i18n('Boxes.Market.NeededForResearchTT')) + '">' + i18n('Boxes.Market.NeededForResearch') + '</label></td>');
+        h.push('<td></td>');
+        h.push('<td></td>');
+        h.push('<td></td>');
         h.push('</tr>');
 
         h.push('</table>');
@@ -378,11 +388,11 @@ let Market = {
 		$('#MarketBody').html(h.join('')).promise().done(function(){
             HTML.Dropdown();
 
-            $('#Market').find('.custom-options').each(function () {
+          /*  $('#Market').find('.custom-options').each(function () {
                 let func = $(this).data('function');
                 let ScrollPos = Market.ScrollPositions[func];
                 if (ScrollPos) $(this).scrollTop(ScrollPos);
-            });
+            });*/
 
 		});
 
@@ -425,12 +435,6 @@ let Market = {
             return false;
         }
 
-        // nur Angebote, deren angebotenes Gut für die Forschung (gemäß
-        // Technologies-Ansicht) noch benötigt wird
-        if (Market._NeededResearchGoodsCache && !Market._NeededResearchGoodsCache.has(Trade['offer']['good_id'])) {
-            return false;
-        }
-
         //Tradepartner
         let IsOwnOffer = Trade['merchant']['is_self'];
         if (IsOwnOffer) {
@@ -443,7 +447,7 @@ let Market = {
                 return false;
             }
         }
-
+        
         let OfferGoodID = Trade['offer']['good_id'],
             NeedGoodID = Trade['need']['good_id'],
             OfferEra = Technologies.Eras[GoodsData[OfferGoodID]['era']],
@@ -463,7 +467,7 @@ let Market = {
         let Rate = Trade['offer']['value'] / Trade['need']['value'];
         let Rating = Rate * Math.pow(2, EraDiff);
 
-        let CurrentTradeAdvantage = (IsOwnOffer ? Market.TradeDisadvantage : Market.TradeAdvantage);
+        CurrentTradeAdvantage = (IsOwnOffer ? Market.TradeDisadvantage : Market.TradeAdvantage);
         if (Rating > 1 && !CurrentTradeAdvantage) {
             return false;
         }
@@ -484,8 +488,8 @@ let Market = {
             }
         }
 
-        let CurrentTradeDisdvantage = (IsOwnOffer ? Market.TradeAdvantage : Market.TradeDisadvantage);
-        if (Rating < 1 && !CurrentTradeDisdvantage) {
+        CurrentTradeDisdvantage = (IsOwnOffer ? Market.TradeAdvantage : Market.TradeDisadvantage);
+        if (Rating < 1 && !Market.TradeDisadvantage) {
             return false;
         }
 
@@ -531,11 +535,11 @@ let Market = {
 		let autoOpen = Settings.GetSetting('ShowMarketFilter');
 
         let h = [];
-        h.push(`${i18n('Boxes.General.Export')}: <span class="btn-group"><button class="btn" onclick="HTML.ExportTable($('#MarketBody').find('.foe-table.exportable'), 'csv', 'Market')">CSV</button>`);
-        h.push(`<button class="btn" onclick="HTML.ExportTable($('#MarketBody').find('.foe-table.exportable'), 'json', 'Market')">JSON</button></span>`);
+        h.push(`${i18n('Boxes.General.Export')}: <span class="btn-group"><button class="btn btn-default" onclick="HTML.ExportTable($('#MarketBody').find('.foe-table.exportable'), 'csv', 'Market')">CSV</button>`);
+        h.push(`<button class="btn btn-default" onclick="HTML.ExportTable($('#MarketBody').find('.foe-table.exportable'), 'json', 'Market')">JSON</button></span>`);
         h.push(`<p><input id="autoStartMarket" name="autoStartMarket" value="1" type="checkbox" ${(autoOpen === true) ? ' checked="checked"' : ''} /> <label for="autoStartMarket">${i18n('Boxes.Market.Settings.Autostart')}</label></p>`);
 
-        h.push(`<p><button onclick="Market.SaveSettings()" id="save-market-settings" class="btn" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
+        h.push(`<p><button onclick="Market.SaveSettings()" id="save-market-settings" class="btn btn-default" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
 
         $('#MarketSettingsBox').html(h.join(''));
     },

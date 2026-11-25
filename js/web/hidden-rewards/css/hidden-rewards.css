@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -38,7 +38,7 @@
 
 #HiddenRewardBox td.warning,
 #HiddenRewardBox td .warning {
-    color: var(--sunflower);
+    color: var(--text-bright);
 }
 
 td[title="incident_sos"],
@@ -102,11 +102,11 @@ td[title="incident_floating_chest"] {
 }
 
 #HiddenRewardBox .warning {
-    color: var(--sunflower);
+    color: var(--text-bright);
     padding: 5px;
     text-align: center;
 }
 
 #HiddenRewardBox .dark-bg {
-    border-bottom: 1px solid var(--sunflower);
+    border-bottom: 1px solid var(--text-bright);
 }

@@ -1,20 +1,12 @@
 function progressCallback({ totalRows, completedRows }) {
-    let percent = totalRows ? Math.ceil((completedRows / totalRows) * 100) : 100;
+    let percent = Math.ceil((completedRows / totalRows) * 100);
+    $("#dbex-loading-data .message span.countRows").html(completedRows);
+    $("#dbex-loading-data .message span.totalRows").html(totalRows);
     $("#dbex-loading-data .message .progressbar .state").css("width", `${percent}%`);
-    return false;
 }
 
 let DBExport = {
     allDB: undefined,
-
-    /**
-     * Only the helper's own databases of the current player - other tools on the game page create their own IndexedDBs.
-     *
-     * @param {string} dbName
-     * @returns {boolean}
-     */
-    isOwnDB: (dbName) => typeof dbName === 'string' && dbName.startsWith('FoeHelperDB_') && dbName.endsWith('_' + ExtPlayerID),
-
     CurrentTab: 'Export',
 
     BuildBox: (event) => {
@@ -96,7 +88,7 @@ let DBExport = {
 
         h.push(`</tbody></table>`);
 
-        h.push(`<button class="btn" id="dbex_ExportSelection" href="#">${i18n('Boxes.DBExport.ExportData')}</button>`);
+        h.push(`<button class="btn btn-default" id="dbex_ExportSelection" href="#">${i18n('Boxes.DBExport.ExportData')}</button>`);
 
         $('#dbexport_wrapper').html(h.join('')).promise().done(function () {
 
@@ -139,7 +131,7 @@ let DBExport = {
 
                 data.localStorage = localSettings.length ? true : false;
 
-                if (!data.indexdb && !data.localStorage)
+                if (!data.indexdb && !data.localStorage) 
                 {
                     DBExport.hidePreloader();
                     return;
@@ -222,7 +214,7 @@ let DBExport = {
                         '<div class="progressbar"><div class="state"></div></div>');
 
                     // check for localStorage
-                    if (file.name.indexOf('_localStorage_') > -1)
+                    if (file.name.search('localStorage') == 4 || file.name.search('localStorage') == 5)
                     {
                         await DBExport.ImportLocalStorage(file, file.name);
                         $("#debex_import_wrapper").append(`<p class="success">${i18n('Boxes.DBExport.ImportSuccessful')}</p>`);
@@ -237,7 +229,7 @@ let DBExport = {
 
                     let SuccessMessage = SuccessState === 1 ? i18n('Boxes.DBExport.ImportSuccessful') : (SuccessState === 0 ? i18n('Boxes.DBExport.ImportPartlySuccessful') : i18n('Boxes.DBExport.ImportFileError'));
                     $("#debex_import_wrapper").append(`<p class="success">${SuccessMessage}</p>` +
-                        `<p><button onclick="location.reload();" class="btn">${i18n('Boxes.DBExport.ReloadPage')}</button></p>`);
+                        `<p><button onclick="location.reload();" class="btn-default">${i18n('Boxes.DBExport.ReloadPage')}</button></p>`);
 
                     DBExport.hidePreloader();
                     break;
@@ -257,7 +249,7 @@ let DBExport = {
                                 return Promise.all([
                                     promises.push(zip.file(zipEntry.name).async("blob").then(async function (blob) {
 
-                                        if (zipEntry.name.indexOf('_localStorage_') > -1)
+                                        if (zipEntry.name.search('localStorage') == 4 || zipEntry.name.search('localStorage') == 5)
                                         {
                                             $("#dbex-loading-data .message").html('<span class="progress">' + (++exportState) + ' / ' + exportCounter + '</span>' +
                                                 '<div class="progressbar"><div class="state" style="width:50%;"></div></div>');
@@ -288,7 +280,7 @@ let DBExport = {
                     Promise.all(promises).then(function () {
                         let SuccessMessage = SuccessState === 1 ? i18n('Boxes.DBExport.ImportSuccessful') : (SuccessState === 0 ? i18n('Boxes.DBExport.ImportPartlySuccessful') : i18n('Boxes.DBExport.ImportFileError'));
                         $("#debex_import_wrapper").append(`<p class="success">${SuccessMessage}</p>` +
-                            `<p><button onclick="location.reload();" class="btn">${i18n('Boxes.DBExport.ReloadPage')}</button></p>`);
+                            `<p><button onclick="location.reload();" class="btn-default">${i18n('Boxes.DBExport.ReloadPage')}</button></p>`);
                         DBExport.hidePreloader();
                     });
                     break;
@@ -336,12 +328,6 @@ let DBExport = {
             let Filename = dbName.split(/_/);
             let ImportPlayerID = Array.isArray(Filename) ? parseInt(Filename.pop()) : undefined;
 
-            if (!dbName.startsWith('FoeHelperDB_'))
-            {
-                $("#debex_import_wrapper").append(`<p class="error">${dbName} <span class="icon error">X</span><span class="errmsg">${i18n('Boxes.DBExport.ImportFileError')}</span></p>`);
-                return 0;
-            }
-
             if (ExtPlayerID !== ImportPlayerID)
             {
                 $("#debex_import_wrapper").append(`<p class="error">${dbName} <span class="icon error">X</span><span class="errmsg">${i18n('Boxes.DBExport.WrongDBPlayerID')}</span></p>`);
@@ -377,7 +363,7 @@ let DBExport = {
 
     GetDBInfo: async () => {
 
-        DBExport.allDB = (await Dexie.getDatabaseNames()).filter(DBExport.isOwnDB);
+        DBExport.allDB = await Dexie.getDatabaseNames();
         let DBInfo = [];
 
         await Promise.all(
@@ -428,7 +414,7 @@ let DBExport = {
         exportCounter = parseInt(saveIndexDB ? data.indexdb.length : 0) + parseInt(saveLocalStorage ? 1 : 0);
 
         $("#dbex-loading-data .message").html('<span class="progress">' + exportState + ' / ' + exportCounter + '</span>' +
-            '<span class="label"></span><div class="progressbar"><div class="state"></div></div>');
+            '<div class="progressbar"><div class="state"></div></div>');
 
         if (data.localStorage === true)
         {
@@ -461,8 +447,7 @@ let DBExport = {
                 await DexieDB.open();
                 try
                 {
-                    $("#dbex-loading-data .message .label").text(DexieDB.name);
-                    const blob = await DexieDB.export({ prettyJson: false, progressCallback });
+                    const blob = await DexieDB.export({ prettyJson: true, progressCallback });
                     if (exportCounter > 1)
                     {
                         zip.file(ExtWorld + '_' + DexieDB.name + ".json", blob);
@@ -480,17 +465,10 @@ let DBExport = {
                 }
             }
         }
+        $("#dbex-loading-data .message .progressbar").html(i18n('Boxes.DBExport.Compression'));
         if (exportCounter > 1)
         {
-            const compressionLabel = i18n('Boxes.DBExport.Compression');
-            $("#dbex-loading-data .message .label").text(compressionLabel);
-            $("#dbex-loading-data .message .progressbar .state").css("width", "0%");
-
-            zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 1 } }, function (meta) {
-                const percent = Math.floor(meta.percent);
-                $("#dbex-loading-data .message .label").text(`${compressionLabel} ${percent} %`);
-                $("#dbex-loading-data .message .progressbar .state").css("width", `${percent}%`);
-            })
+            zip.generateAsync({ type: "blob", compression: "DEFLATE" })
                 .then(function (blob) {
                     download(blob, ExtWorld + "_foe_helper_export_" + moment().format("YYMMDD-HHmm") + "_" + ExtPlayerID + ".zip", "application/zip");
                     DBExport.hidePreloader();
@@ -507,7 +485,7 @@ let DBExport = {
 
         if (!$('#dbex-loading-data').length)
         {
-            $(id).append('<div id="dbex-loading-data"><div class="loadericon"></div><div class="message"></div></div>');
+            $(id).append('<div id="dbex-loading-data"><div class="message"></div><div class="loadericon"></div></div>');
         }
 
     },

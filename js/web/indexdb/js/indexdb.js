@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -32,7 +32,7 @@
 * Structure of "statsRewards" db
 * {
 *   date: Date,
-*   type: 'battlegrounds_conquest' | 'guildExpedition' | 'spoilsOfWar' | 'diplomaticGifts', // legacy names, see MainParser.NormalizeRewardSource
+*   type: 'battlegrounds_conquest' | 'guildExpedition' | 'spoilsOfWar' | 'diplomaticGifts',
 *   amount: number,
 *   reward: string, // eg. resource#strategy_points#10
 * }
@@ -64,30 +64,6 @@
 *   resources: Object,
 *   clandId: number
 * }
-* Structure of "statsPlayerD", one record per day with the latest known values of the own player
-* {
-*   date: Date,
-*   era: string,
-*   guildId: number,
-*   guildName?: string,
-*   score?: number,
-*   wonBattles?: number,
-*   gbs?: Object, // key - city entity id of the great building, value - level
-*   achievements?: Object, // key - "group#achievement", value - [level, progress]
-* }
-* Structure of "gbContributions", every own FP contribution to a great building
-* {
-*   id: number,
-*   date: Date,
-*   ownerId: number,
-*   ownerName?: string,
-*   entityId: number, // map entity id
-*   cityEntityId?: string,
-*   level: number, // current level of the great building, the FP go into the next one
-*   fp: number, // FP of this contribution
-*   total?: number, // own FP in this level after the contribution
-*   rank?: number, // own rank after the contribution
-* }
 */
 
 let IndexDB = {
@@ -107,7 +83,7 @@ let IndexDB = {
     },
 
 
-    Init: async (playerId) => {
+    Init: async (playerId) => {return;
         const primaryDBName = 'FoeHelperDB_' + playerId; //Create different IndexDBs if two players are sharing the same PC playing on the same world
         const isNewDB = !await Dexie.exists(primaryDBName);
 
@@ -171,19 +147,12 @@ let IndexDB = {
             statsTreasureClanH: 'date, clanId',
             statsTreasureClanD: 'date, clanId',
         });
-        db.version(3).stores({
-            buildingMeta: 'id, hash, json',
-        });
-        db.version(4).stores({
-            statsPlayerD: 'date',
-            gbContributions: '++id, date, ownerId',
-        });
     },
 
     /**
      * Database migration util function. Should be called once
      */
-    mergeDatabases: async (playerId) => {
+    mergeDatabases: async (playerId) => {return;
         // Skip if main db is not empty
         if (await IndexDB.db.players.count()) { return; }
         clearLog();
@@ -198,7 +167,7 @@ let IndexDB = {
         const betaDBName = 'FoeHelper_' + playerId;
         if (await Dexie.exists(betaDBName)) {
             betaDB = new Dexie(betaDBName);
-
+            
             betaDB.version(1).stores({
                 players: 'id,date',
                 actions: '++id,playerId,date,type',
@@ -319,7 +288,7 @@ let IndexDB = {
         }
 
         function log(text) {
-            //console.log('mergeDatabases: ' + text);
+            console.log('mergeDatabases: ' + text);
             let logTxt = localStorage.getItem('FH_IndexDBLastMigraion') || '';
             logTxt += text + '\n';
             localStorage.setItem('FH_IndexDBLastMigraion', logTxt);
@@ -337,7 +306,7 @@ let IndexDB = {
      *   // copy and set version to 1
      *   IndexDB.cloneDB('PlayerDB', 'PlayerDB_copy', 1);
      */
-    cloneDB: async (srcName, dstName, version) => {
+    cloneDB: async (srcName, dstName, version) => {return;
         dstName = dstName || srcName + '_copy';
         const sdb = new Dexie(srcName),
               ddb = new Dexie(dstName);
@@ -386,9 +355,9 @@ let IndexDB = {
     * @returns {Promise<void>}
     */
     GarbageCollector: async () => {
-        // Daily records are kept back to the start of the previous calendar year,
-        // so a whole year can still be evaluated in January of the next one
-        const dailyExpiryTime = moment().subtract(1, 'years').startOf('year').toDate();
+        return;
+        // Expiry time for db with 1 record per day
+        const daylyExpiryTime = moment().subtract(1, 'years').toDate();
 
         // Expiry time for db with 1 record per hour
         const hourlyExpiryTime = moment().subtract(8, 'days').toDate();
@@ -401,8 +370,8 @@ let IndexDB = {
         await IndexDB.db.players.clear();
         await IndexDB.db.greatbuildings.clear();
 
-        for (const table of ['statsRewards', 'statsUnitsD', 'statsTreasurePlayerD', 'statsTreasureClanD', 'statsPlayerD', 'gbContributions']) {
-            await IndexDB.db[table].where('date').below(dailyExpiryTime).delete();
+        for (const table of ['statsRewards', 'statsUnitsD', 'statsTreasurePlayerD', 'statsTreasureClanD']) {
+            await IndexDB.db[table].where('date').below(daylyExpiryTime).delete();
         }
 
         for (const table of ['statsUnitsH', 'statsTreasurePlayerH', 'statsTreasureClanH']) {
@@ -431,15 +400,6 @@ let IndexDB = {
                 });
             IndexDB.db.statsRewards.bulkPut(y);
             localStorage.setItem("HiddenRewardOverwrite","done");
-        }
-
-        // prestige update (11/2026): reward sources arrive in snake_case, rename them back to the stored legacy names
-        const renameFlag = 'RewardSourceRename_' + IndexDB.db.name;
-        if (!localStorage.getItem(renameFlag)) {
-            await IndexDB.db.statsRewards
-                .filter(r => MainParser.NormalizeRewardSource(r.type) !== r.type)
-                .modify(r => { r.type = MainParser.NormalizeRewardSource(r.type); });
-            localStorage.setItem(renameFlag, 'done');
         }
     },
 

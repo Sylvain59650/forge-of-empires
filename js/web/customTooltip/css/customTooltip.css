@@ -38,8 +38,8 @@
 }
 
 .buildingTT .imgContainer {
-    min-width:150px;
-    max-width:150px;
+    min-width:150px; 
+    max-width:150px; 
     vertical-align:top
 }
 
@@ -55,18 +55,7 @@
 .HXBuilding td {
     width: 300px;
     display: flex;
-    align-items: center;
     white-space: nowrap;
-}
-
-/* rows wrapping to several lines keep their top alignment */
-.HXBuilding td.wrapText,
-.HXBuilding td.limited,
-.HXBuilding td.hasAlly {
-    align-items: flex-start;
-}
-.HXBuilding td.wrapText {
-    white-space: normal;
 }
 .HXBuilding img {
     padding-right: 3px;
@@ -86,12 +75,20 @@
     position: absolute;
     right: 320px;
     bottom: 10px;
-    background: var(--tooltip-inhabitant);
+    background: #a4a45d;
+}
+.HXBuilding .inhabitant {
+    max-width: unset;
+    max-height: unset;
+    position: absolute;
+    right: 320px;
+    bottom: 10px;
+    background: #a4a45d;
 }
 td:nth-child(3) .HXBuilding .inhabitant {
     display: none;
 }
-.HXBuilding td.hasInhabitant {
+.HXBuilding td:has(.inhabitant) {
     position: relative;
 }
 .HXBuilding .ifMot {
@@ -102,7 +99,7 @@ td:nth-child(3) .HXBuilding .inhabitant {
     padding-right: 0px;
 }
 .HXBuilding .randomProductions {
-    border: 2px var(--table-bg-error) solid;
+    border: 2px #350000e8 solid;
     margin-left: -6px;
     margin-top: -4px;
     margin-bottom: -4px;
@@ -137,31 +134,16 @@ td:nth-child(3) .HXBuilding .inhabitant {
     animation-iteration-count: infinite;
 }
 .HXBuilding span.positive {
-    color: var(--success);
+    color: var(--text-success);
     font-weight: bold;
 }
 .HXBuilding span.negative {
-    color: var(--danger-red);
+    color: var(--text-danger);
     font-weight: bold;
 }
-/* Actual collection amount including the global FP/goods production boosts */
-.HXBuilding .boostedAmount {
-    margin-left: 4px;
-    font-size: 0.82em;
-    color: var(--success);
-    white-space: nowrap;
-}
-.HXBuilding .boostedAmount img {
-    max-width: 14px;
-    max-height: 15px;
-    padding-right: 1px;
-    vertical-align: middle;
-}
-
 .HXBuilding .limited {
-    white-space: normal;
+    text-wrap: auto;
 }
-
 .HXBuilding .limited img{
     align-self: flex-start;
 }
@@ -174,7 +156,7 @@ td:nth-child(3) .HXBuilding .inhabitant {
 #QIActions {
     position: absolute;
     top: 46px;
-    left: 150px;
+    left: 258px;
     z-index: 100;
 }
 
@@ -191,7 +173,6 @@ td:nth-child(3) .HXBuilding .inhabitant {
     justify-content: flex-end;
     pointer-events: none;
     overflow: hidden;
-    user-select: none;
 }
 #RewardsList > span {
     white-space: nowrap;
@@ -201,7 +182,7 @@ td:nth-child(3) .HXBuilding .inhabitant {
     border-radius: 10px;
     padding: 2px;
     margin-top: 2px;
-    color: var(--beige);
+    color: var(--text-normal);
     background: var(--text-darker);
     border: 2px solid var(--text-dark);
 }
@@ -216,170 +197,4 @@ td:nth-child(3) .HXBuilding .inhabitant {
     30% {  transform: translateX(0%)    }
     85% {  transform: translateX(-100%)    }
     95% {  transform: translateX(-100%)    }
-}
-
-.inventoryTooltip{
-    display: flex;
-    flex-direction: column;
-	max-height: 100vh;
-	overflow: hidden;
-}
-
-.inventoryTooltip .maxBuildingDetails{
-    margin-left: 7px;
-    display: flex;
-    place-content: space-between;
-    flex-wrap: wrap;
-}
-.inventoryChains {
-	overflow: hidden;
-}
-.inventoryChain{
-    display: flex;
-    align-items: stretch;
-	border-top: 2px solid #0003;
-}
-.inventoryChain.ascendedOption{
-	background-color: var(--table-bg-success);
-	border-radius: 3px;
-}
-.inventoryChain:first-child{
-    margin-top: 5px;
-}
-.inventoryChain:last-child{
-    margin-bottom: 0;
-}
-.inventoryChainCount{
-    align-self: center;
-	font-size: larger;
-	font-weight: bolder;
-    margin-left: 10px;
-	margin-right: 10px;
-	width: 2em;
-	text-align: right;
-}
-.inventoryChainItem{
-    width: 130px;
-    display: flex;
-    flex-direction: column;
-	justify-content: flex-start;
-    text-align: center;
-    align-items: center;
-	margin-right: 5px;
-	padding: 5px;
-	margin-top:5px;
-	position: relative;
-	border-left: 1px dotted #0003;
-}
-.inventoryChainItem:not(:last-child)::after{
-	content: "";
-	width: 35px;
-    height: 35px;
-	background-image: url('../../x_img/green_arrow.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-	position:absolute;
-	left: 130px;
-    top: 50px;
-    z-index: 1;
-}
-.inventoryChainItem:last-child{
-	margin-right: 0;
-}
-.inventoryChainItemImg{
-    width: 130px;
-	height: 7vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 5px 0;
-}
-.inventoryChainItemImg img {
-	max-width: 100px;
-	max-height: 7vh;
-}
-.inventoryChainItemDesc{
-    max-height: 4.3em;
-    overflow: hidden;
-    padding: 5px 0;
-	font-size: 0.8em;
-}
-.inventoryChainItem span{
-	font-style: italic;
-}
-.inventoryChainItem.building.city::before,
-.inventoryChainItem.building.inventory::before {
-    width: 30px;
-    height: 30px;
-    background-size: contain;
-    content: "";
-    background-repeat: no-repeat;
-    left: 3px;
-    position: absolute;
-    top: 3px;
-	filter: drop-shadow(2px 4px 6px var(--black-65));
-}
-
-.inventoryChainItem.building.city::before {
-	background-image: url('../../x_img/city.png');
-}
-.inventoryChainItem.building.inventory::before {
-    background-image: url('../../x_img/inventory.png');
-}
-
-.inventoryChainItemCount {
-    width: 35px;
-    height: 35px;
-    right: 5px;
-    position: absolute;
-    top: 0px;
-    align-items: center;
-    font-size: large;
-    font-weight: bolder;
-    text-align: right;
-    color: var(--orange);
-	filter: drop-shadow(2px 4px 6px var(--black));
-}
-.inventoryChainAscendedStock::after {
-	content: '';
-	display: inline-block;
-	width: 17px;
-	height: 22px;
-	margin-left: 2px;
-	background: url('../../x_img/upgrades.png') no-repeat left top;
-	background-size: auto 100%;
-	background-position: -92px 0;
-	zoom: 1.3;
-    position: relative;
-    top: 7px;
-}
-.inventoryChainAscendedStock {
-    position: absolute;
-    right: 10px;
-    top: 20px;
-    font-size: large;
-    font-weight: bolder;
-}
-
-.inventoryTooltip h2{
-	display: flex;
-    justify-content: space-between;
-}
-.buildingTT h2 {
-	display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-}
-
-.inventoryTooltip .upgrades{
-	margin-left: 15px;
-}
-.buildingTT .upgrades {
-	margin-left: auto;
-}
-
-.inventoryTooltip .upgrades span,
-.buildingTT .upgrades span {
-    background-color: var(--black-50);
-    border-radius: 20px;
 }
