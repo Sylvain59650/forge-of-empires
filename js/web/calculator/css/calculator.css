@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -11,19 +11,39 @@
  * **************************************************************************************
  */
 
-/* own box in split view */
-#CalculatorBox {
-	top: 100px;
-	min-width: 280px;
+#costCalculator {
+	top: 30%;
+	left: 30px;
+	min-width: 350px;
 }
 
-#CalculatorBoxBody {
+#costCalculator #costCalculatorBody {
 	position: relative;
+	min-width: 320px;
 }
 
-#gbCalc input {
+#costCalculator #costCalculatorBody .lg-not-possible {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0,0,0, 0.7);
+}
+
+#costCalculator #costCalculatorBody .lg-not-possible::after {
+	content: attr(data-text);
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	width: 240px;
+}
+
+#costCalculator #costCalculatorBody input {
 	display: inline-block;
-	width: 35px;
+	width: 25px;
 	text-align: center;
 	padding: 1px 5px;
 	line-height: 1.5;
@@ -31,153 +51,139 @@
 	color: var(--text-medium);
 	background-clip: padding-box;
 	border: 1px solid var(--text-dark);
-	border-radius: 0 4px 4px 0;
 	transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 
-#gbCalc strong {
-	color: var(--sunflower);
+#costCalculator #costCalculatorBody strong {
+	color: var(--text-bright);
 }
 
-#gbCalc .header {
+#costCalculator #costCalculatorBody .header {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	font-size: 90%;
+	margin: 3px 0;
 }
 
-#gbCalc .header span {
-	color: var(--beige);
+#costCalculator #costCalculatorBody .header span {
+	color: var(--text-normal);
 }
 
-#gbCalc .header .building-name {
-	font-size: 125%;
+#costCalculator #costCalculatorBody .header .building-name {
+	font-size: 115%;
 }
 
-#gbCalc .header .player-name {
+#costCalculator #costCalculatorBody .header .player-name {
 	display: block;
 	white-space: nowrap;
+	color: var(--text-bright);
+	margin: 0 10px;
 }
 
-#gbCalc .rq {
-	font-size: 90%;
+#costCalculator #costCalculatorBody table.foe-table {
+	margin-top: 3px;
 }
 
-#gbCalc table.foe-table {
-	margin-top: 2px;
-}
-
-#gbCalc tr th {
+#costCalculator tr th {
 	text-align: center;
 }
 
-#gbCalc tr th span {
+#costCalculator tr th span {
 	display: inline-block;
 	width: 25px;
 	height: 25px;
 	vertical-align: bottom;
 }
 
-#gbCalc tr th span.blueprint {
+#costCalculator tr th span.blueprint {
 	background: url(../../x_img/blueprint.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCalc tr th span.medal {
+#costCalculator tr th span.medal {
 	background: url(../../x_img/medal.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCalc tr th span.forgepoints {
+#costCalculator tr th span.forgepoints {
 	background: url(../../x_img/forgepoints.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCalc tr th span.contribution-boost {
-	background: url(../../x_img/arc_bonus.png) center no-repeat;
-	background-size: contain;
-}
-
-#gbCalc .foe-table td {
+#costCalculator #costCalculatorBody .foe-table td {
 	white-space: nowrap;
 }
 
-#gbCalc td.error,
-#gbCalc td .error {
-	color: var(--danger-red);
+#costCalculator #costCalculatorBody td.error,
+#costCalculator #costCalculatorBody td .error {
+	color: #ec4d4d;
 }
 
-#gbCalc strong.success {
-	color: var(--success);
+#costCalculator #costCalculatorBody strong.success {
+	color: var(--text-success);
 }
 
-#gbCalc .text-grey,
-#gbCalc .text-grey strong {
-	color: var(--text-tab);
-	opacity: 0.9;
+#costCalculator #costCalculatorBody .text-grey,
+#costCalculator #costCalculatorBody .text-grey strong {
+	color: #b1b1b1;
+	opacity: 0.75;
 }
 
-#gbCalc strong.info {
-	color: var(--info-blue);
+#costCalculator #costCalculatorBody strong.info {
+	color: var(--text-info);
 }
 
-#gbCalc tr.info-row {
-	background-color: var(--table-bg-info);
-	border-top-color: var(--table-bt-info);
-	border-bottom-color: var(--table-bb-info);
+#costCalculator #costCalculatorBody tr.info-row {
+	background-color: var(--background-table-info);
 }
 
-#gbCalc tr.bg-green {
-	background-color: var(--table-bg-success);
-	border-top-color: var(--table-bt-success);
-	border-bottom-color: var(--table-bb-success);
+#costCalculator #costCalculatorBody tr.bg-green {
+	background-color: var(--background-table-success);
 }
 
-#gbCalc tr.bg-red {
-	background-color: var(--table-bg-error);
-	border-top-color: var(--table-bt-error);
-	border-bottom-color: var(--table-bb-error);
+#costCalculator #costCalculatorBody tr.bg-red {
+	background-color: var(--background-table-error);
 }
 
-#gbCalc tr.bg-yellow {
-	background-color: var(--table-bg-bright);
-	border-top-color: var(--table-bt-bright);
-	border-bottom-color: var(--table-bb-bright);
+#costCalculator #costCalculatorBody tr.bg-yellow {
+	background-color: var(--background-table-bright);
 }
 
-#gbCalc .costFactorWrapper {
-	padding-top: 5px;
+#costCalculatorBody .costFactorWrapper {
+	padding: 5px 10px;
 	text-align: center;
 }
 
-#gbCalc .costFactorWrapper span {
-	display: inline-flex;
-	align-items: stretch;
-}
-
-#gbCalc .costFactorWrapper .btn-group {
+#costCalculatorBody .costFactorWrapper > div:first-child {
 	text-align: center;
+	width: 36%;
 	white-space: nowrap;
 }
 
-#gbCalc #costTable {
+#costCalculatorBody .costFactorWrapper > div:first-child span {
+	white-space: nowrap;
+	display: block;
+	margin-top: 6px;
+}
+
+#costCalculatorBody .costFactorWrapper > div:last-child {
+	text-align: center;
+	width: 39%;
+}
+
+#costCalculatorBody .costFactorWrapper .btn-default {
+	padding: 0.2rem 0.4rem;
+}
+
+#costCalculatorBody .costFactorWrapper > span {
+	display: inline-block;
+	margin-right: 15px;
+}
+
+#costCalculatorBody #costTable {
 	user-select: text;
 }
 
-.btn.arkBonus {
-	font-weight: bold;
-}
-#gbCalc .lb-tier-icon {
-	height: 18px;
-	vertical-align: text-bottom;
-}
-
-#gbCalc .bp-tier-amount {
-	white-space: nowrap;
-}
-
-#gbCalc .bp-tier-icon {
-	height: 16px;
-	vertical-align: text-bottom;
-	margin-left: 1px;
+#annonce {
+	font-size:8pt;
 }

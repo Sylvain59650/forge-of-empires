@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -32,7 +32,7 @@ let Treasury = {
                 'title': i18n('Boxes.Treasury.Title'),
                 'auto_close': true,
                 'dragdrop': true,
-                settings: () => Treasury.ShowSettings()
+                settings: 'Treasury.ShowSettings()'
             });
 
             // CSS in den DOM prügeln
@@ -49,13 +49,13 @@ let Treasury = {
             });
         }
 
-        // copy the entries: LastNewLogs is processed again on "reset" and must keep the original date strings
-        let LogArray = Logs['responseData']['logs'].map(x => {
-            let date = typeof x.createdAt === 'string' ? EventHandler.ParseDate(x.createdAt) : null;
-            return Object.assign({}, x, { createdAt: date || x.createdAt });
+        let LogArray = Logs['responseData']['logs'].map(x=>{
+            let date = EventHandler.ParseDate(x.createdAt)
+            x.createdAt = date||x.createdAt
+            return x
         });
-        Treasury.Logs = Treasury.Logs.concat(LogArray);
-
+        Treasury.Logs = Treasury.Logs.concat(LogArray);           
+                
         Treasury.CalcBody();
     },
 
@@ -65,8 +65,8 @@ let Treasury = {
 
         h.push('<strong>' + i18n('Boxes.Treasury.Message') + '</strong><br>');
         h.push(i18n('Boxes.Treasury.RowNumber') + ': ' + HTML.Format(Treasury.Logs.length) + '<br>');
-        h.push('<span class="btn button-reset">' + i18n('Boxes.Treasury.Reset') + '</span>');
-        h.push('<span class="btn button-export">' + i18n('Boxes.Treasury.Export') + '</span>');
+        h.push('<span class="btn-default button-reset">' + i18n('Boxes.Treasury.Reset') + '</span>');
+        h.push('<span class="btn-default button-export">' + i18n('Boxes.Treasury.Export') + '</span>');
 
         $('#treasuryBody').html(h.join(''));
     },
@@ -107,7 +107,7 @@ let Treasury = {
         let ExportString = h.join('\r\n');
         let BOM = "\uFEFF";
         let Blob1 = new Blob([BOM + ExportString], { type: "application/octet-binary;charset=ANSI" });
-        MainParser.ExportFile(Blob1, 'GuildTreasury-'+moment().format('YYYY-MM-DD')+'.csv');
+        MainParser.ExportFile(Blob1, 'GBG-export.csv');
     },
 
     /**
@@ -117,8 +117,8 @@ let Treasury = {
 		let autoOpen = Settings.GetSetting('ShowGuildTreasuryLogExport');
 
         let h = [];
-        h.push(`<p><input id="autoStartTreasuryExport" name="autoStartTreasuryExport" value="1" type="checkbox" ${(autoOpen === true) ? ' checked="checked"' : ''} /> <label for="autoStartTreasuryExport">${i18n('Boxes.Settings.Autostart')}</label></p>`);
-        h.push(`<p><button onclick="Treasury.SaveSettings()" id="save-treasury-settings" class="btn" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
+        h.push(`<p><input id="autoStartTreasuryExport" name="autoStartTreasuryExport" value="1" type="checkbox" ${(autoOpen === true) ? ' checked="checked"' : ''} /> <label for="autoStartMarket">${i18n('Boxes.Settings.Autostart')}</label></p>`);
+        h.push(`<p><button onclick="Treasury.SaveSettings()" id="save-treasury-settings" class="btn btn-default" style="width:100%">${i18n('Boxes.Settings.Save')}</button></p>`);
 
         $('#treasurySettingsBox').html(h.join(''));
     },
@@ -128,7 +128,7 @@ let Treasury = {
     */
     SaveSettings: () => {
         let value = false;
-		if ($("#autoStartTreasuryExport").is(':checked'))
+		if ($("#autoStartMarket").is(':checked'))
 			value = true;
 
 		localStorage.setItem('ShowGuildTreasuryLogExport', value);

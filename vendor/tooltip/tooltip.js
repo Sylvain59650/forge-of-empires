@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -113,7 +113,7 @@
 				, e = $.Event('show')
 
 			if (this.hasContent() && this.enabled) {
-				this.$element.triggerHandler(e)
+				this.$element.trigger(e)
 				if (e.isDefaultPrevented()) return
 				$tip = this.tip()
 				this.setContent()
@@ -142,16 +142,7 @@
 					.detach()
 					.css({ top: 0, left: 0, display: 'block' })
 
-				// resolve string containers (e.g. 'body') against the element's own
-				// document, so tooltips also work inside popup windows (Popup module)
-				if (this.options.container) {
-					var container = typeof this.options.container == 'string' ?
-						$(this.options.container, this.$element[0].ownerDocument) :
-						$(this.options.container)
-					$tip.appendTo(container)
-				} else {
-					$tip.insertAfter(this.$element)
-				}
+				this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
 
 				pos = this.getPosition()
 
@@ -174,7 +165,7 @@
 				}
 
 				this.applyPlacement(tp, placement)
-				this.$element.triggerHandler('shown')
+				this.$element.trigger('shown')
 			}
 		}
 
@@ -242,7 +233,7 @@
 				, $tip = this.tip()
 				, e = $.Event('hide')
 
-			this.$element.triggerHandler(e)
+			this.$element.trigger(e)
 			if (e.isDefaultPrevented()) return
 
 			$tip.removeClass('in')
@@ -262,7 +253,7 @@
 				removeWithAnimation() :
 				$tip.detach()
 
-			this.$element.triggerHandler('hidden')
+			this.$element.trigger('hidden')
 
 			return this
 		}
@@ -377,23 +368,5 @@
 		$.fn.tooltip = old
 		return this
 	}
-
-
-	/* TOOLTIP GUARD
-	 * ============= */
-
-	// Other extensions register their own tooltip plugin (e.g. Bootstrap 5) on the
-	// jQuery of the page and would replace this one, on which all helper boxes rely.
-	// Later assignments are ignored, so the helper tooltips keep working.
-	var helperTooltip = $.fn.tooltip
-
-	Object.defineProperty($.fn, 'tooltip', {
-		configurable: true,
-		enumerable: true,
-		get: function () {
-			return helperTooltip
-		},
-		set: function () {}
-	})
 
 }(window.jQuery);

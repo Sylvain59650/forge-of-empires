@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -199,7 +199,7 @@ FoEproxy.addHandler('CastleSystemService', 'all', (data, postData) => {
 
 });
 
-// Update SevenDayChallenge
+// Update SevenDayChallenge 
 FoEproxy.addHandler('ChallengeService', 'updateTaskProgress', (data, postData) => {
 
     if (!data || !data.responseData) { return; }
@@ -350,7 +350,7 @@ let Castle = {
                 dragdrop: true,
                 resize: false,
                 minimize: true,
-                settings: () => Castle.CastleSettings()
+                settings: 'Castle.CastleSettings()'
             });
 
             HTML.AddCssFile('castle');
@@ -459,7 +459,7 @@ let Castle = {
         if (d.nextCastlePoints)
         {
             let n = d.nextCastlePoints;
-
+            
             // reset battle/negotiation points if new day started
             if (Castle.startOfDay !== startOfDay)
             {
@@ -479,7 +479,7 @@ let Castle = {
                 rtype = 'negotiation';
             }
 
-            nextlevel = Castle.curLevel && Castle.curLevel < d.level;
+            nextlevel = Castle.curLevel && Castle.curlLevel < d.level;
 
             Castle.curLevel = d.level !== undefined ? d.level : Castle.curLevel;
             Castle.NextWinningBattlesPoints = n.castlePointsWinBattle !== undefined ? n.castlePointsWinBattle : Castle.NextWinningBattlesPoints;
@@ -565,7 +565,7 @@ let Castle = {
             date: startOfDay
         });
 
-        // Daily negotiation reward
+        // Daily negotiation reward   
         for (let i = Castle.DailyNegotiationsReward; i > Castle.NextNegotiationPoints; i -= 2)
         {
             negotiationPointReward += i;
@@ -859,14 +859,13 @@ let Castle = {
 
         if ($('#Castle #casPointsWrapper').length === 1)
         {
-            // no entry for the max level (or levels not loaded yet)
-            let CastleLimit = MainParser.CastleSystemLevels?.[Castle.curLevel]?.requiredPoints;
+            let CastleLimit = MainParser.CastleSystemLevels[Castle.curLevel].requiredPoints;
 
             $('#Castle #casPointsWrapper').html(`
-                <div><span>${i18n('Boxes.Castle.CastlePoints')}: ${HTML.Format(Castle.curCastlePoints)}${CastleLimit !== undefined ? ' / ' + HTML.Format(CastleLimit) : ''}</span>
+                <div><span>${i18n('Boxes.Castle.CastlePoints')}: ${HTML.Format(Castle.curCastlePoints)} / ${HTML.Format(CastleLimit)}</span>
                 <span id="casPointsDiff">${diff ? '+' + diff : ''}</span><br />
                 <span>${i18n('Boxes.Castle.Level')}: ${Castle.curLevel}</span></div>
-                <div><span id="casLogBtn"><button id="casSwitchView" class="btn"${!Castle.CastlePointLog || Castle.CastlePointLog.length === 0 ? ' disabled' : ''}>${Castle.CurrentView === 'log' ? i18n('Boxes.Castle.Overview') : i18n('Boxes.Castle.Log')}</button></span></div>
+                <div><span id="casLogBtn"><button id="casSwitchView" class="btn btn-default"${!Castle.CastlePointLog || Castle.CastlePointLog.length === 0 ? ' disabled' : ''}>${Castle.CurrentView === 'log' ? i18n('Boxes.Castle.Overview') : i18n('Boxes.Castle.Log')}</button></span></div>
             `).promise().done(function () {
 
                 if (diff)
@@ -1018,7 +1017,7 @@ let Castle = {
             CastlePointLog = JSON.parse(localStorage.getItem('CastlePointLog') || '[]');
         }
 
-        // remove requestIds from log
+        // remove requestIds from log 
         CastlePointLog = CastlePointLog.map(e => {
             delete e.rid
             return e
@@ -1049,7 +1048,7 @@ let Castle = {
         });
         c.push(`</select></p>`);
 
-        c.push(`<hr><p><button id="save-Castle-settings" class="btn" style="width:100%" onclick="Castle.SettingsSaveValues()">${i18n('Boxes.General.Save')}</button></p>`);
+        c.push(`<hr><p><button id="save-Castle-settings" class="btn btn-default" style="width:100%" onclick="Castle.SettingsSaveValues()">${i18n('Boxes.General.Save')}</button></p>`);
         $('#CastleSettingsBox').html(c.join(''));
 
     },

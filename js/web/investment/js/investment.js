@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -14,7 +14,7 @@
 // LG Investitionen
 FoEproxy.addHandler('GreatBuildingsService', (data) => {
 
-	if(typeof data['requestMethod'] === 'undefined')
+	if(typeof data['requestMethod'] === 'undefined') 
 	{
 		return;
 	}
@@ -60,7 +60,7 @@ let Investment = {
 				dragdrop: true,
 				resize: true,
 				minimize: true,
-				settings: () => Investment.ShowInvestmentSettings()
+				settings: 'Investment.ShowInvestmentSettings()'
 			});
 
 			HTML.AddCssFile('investment');
@@ -149,7 +149,7 @@ let Investment = {
 		b.push(`<div id="invest-bar">${i18n('Boxes.Investment.InvestBar')} <strong class="invest-storage">0</strong></div>`);
 		b.push(`<div id="reward-bar">${i18n('Boxes.Investment.CurrReward')}<strong class="reward-storage">0</strong>${removeUnsafeCalc ? '<span class="safe">  (' + i18n('Boxes.Investment.Safe') + ')</span>':''}</div>`);
 		b.push(`<div id="total-fp" class="text-center">${i18n('Boxes.Investment.TotalFP')}<strong class="total-storage-invest">0</strong></div>`);
-
+		
 		if (showMedals === 1) {
 			b.push('<div id="total-medals" class="text-center"><span class="invest-tooltip icon medal" title="' + HTML.i18nTooltip(i18n('Boxes.Investment.Overview.MedalsProfit')) + '"></span><strong class="total-medals-reward">0</strong></div>');
 		}
@@ -192,17 +192,17 @@ let Investment = {
 		h.push('<th class="is-number text-center" data-type="invest-group">&nbsp;</th>' +
 			'<th class="is-number text-center invest-tooltip" data-type="invest-group" title="' + HTML.i18nTooltip(i18n('Boxes.Investment.Overview.InvestedDesc')) + '">' + i18n('Boxes.Investment.Overview.Invested') + '</th>' +
 			'<th class="is-number text-center invest-tooltip" data-type="invest-group" title="' + HTML.i18nTooltip(i18n('Boxes.Investment.Overview.ProfitDesc')) + '" >' + i18n('Boxes.Investment.Overview.Profit') + '</th>');
-
+		
 		if(showMedals)
 		{
 			h.push('<th class="is-number text-center" data-type="invest-group"><span class="medal" title="' + HTML.i18nTooltip(i18n('Boxes.Investment.Overview.Medals')) + '"></span></th>');
 		}
-
+		
 		if(showBlueprints)
 		{
 			h.push('<th class="is-number text-center" data-type="invest-group"><span class="blueprints" title="' + HTML.i18nTooltip(i18n('Boxes.Investment.Overview.Blueprints')) + '"></span></th>');
 		}
-
+		
 		h.push('<th class="no-sort"></th></tr></thead><tbody class="invest-group">');
 
 		let CurrentGB = await IndexDB.db.investhistory.reverse().toArray();
@@ -270,7 +270,7 @@ let Investment = {
 				`<td class="case-sensitive" data-text="${helper.str.cleanup(contribution['playerName'])}"><img style="max-width: 22px" src="${srcLinks.GetPortrait(contribution['Avatar'])}" alt="${contribution['playerName']}"> ${MainParser.GetPlayerLink(contribution['playerId'], contribution['playerName'])}</td>`);
 			h.push('<td class="case-sensitive" data-text="' + helper.str.cleanup(contribution['gbname']) + '">' + contribution['gbname'] + ' (' + contribution['level'] + ')</td>');
 			h.push(`<td class="is-number text-center invest-tooltip" data-number="${isHidden}" title="${i18n('Boxes.Investment.Overview.HideGB')}"><span class="hideicon ishidden-${isHidden?'on':'off'}"></span></td>`);
-
+			
 			if (showEntryDate) {
 				h.push(`<td class="is-numeric" data-number="${moment(contribution['date']).format('YYMMDDHHmm')}">${moment(contribution['date']).format(i18n('Date'))}</td>`);
 			}
@@ -298,12 +298,12 @@ let Investment = {
 			h.push(`<td class="is-number text-center" data-number="${contribution['rank']}"><img class="rank invest-tooltip" src="${extUrl}js/web/x_img/gb_p${rankImageValue}.png" title="${i18n('Boxes.Investment.Rank')} ${contribution['rank']}" /></td>`);
 			h.push(`<td class="is-number text-center gbinvestment" data-number="${contribution['currentFp']}">${contribution['currentFp']}</td>`);
 			h.push(`<td class="is-number text-center gbprofit" data-number="${RealProfit}"><b class="${RealProfitClass}">${RealProfit}</b></td>`);
-
+			
 			if(showMedals)
 			{
 				h.push(`<td class="is-number text-center gbmedals" data-number="${Medals}"><b class="${RealProfitClass === 'error' ? 'success' : RealProfitClass}">${HTML.Format(Medals)}</b></td>`);
 			}
-
+			
 			if(showBlueprints)
 			{
 				h.push(`<td class="is-number text-center gbblueprints" data-number="${Blueprints}"><b class="${RealProfitClass === 'error' ? 'success' : RealProfitClass}">${HTML.Format(Blueprints)}</b></td>`);
@@ -418,7 +418,7 @@ let Investment = {
 		c.push(`<hr /><input id="showhiddengb" name="showhiddengb" value="1" type="checkbox" ${(showHiddenGb === 1) ? ' checked="checked"':''} /> <label for="showhiddengb">${i18n('Boxes.Investment.Overview.SettingsHiddenGB')}</label><br>`);
 		c.push(`<input id="removeunsafecalc" name="removeunsafecalc" value="1" type="checkbox" ${(removeUnsafeCalc === 1) ? ' checked="checked"':''} /> <label for="removeunsafecalc">${i18n('Boxes.Investment.Overview.SettingsUnsafeCalc')}</label>`);
 		c.push(`<hr /><input id="showinvestmentsautomatically" name="showinvestmentsautomatically" value="1" type="checkbox" ${(showinvestmentsautomatically === true) ? ' checked="checked"':''} /> <label for="showinvestmentsautomatically">${i18n('Boxes.Settings.Autostart')}</label>`);
-		c.push(`<p><button id="save-Investment-settings" class="btn" style="width:100%" onclick="Investment.SettingsSaveValues()">${i18n('Boxes.Investment.Overview.SettingsSave')}</button></p>`);
+		c.push(`<p><button id="save-Investment-settings" class="btn btn-default" style="width:100%" onclick="Investment.SettingsSaveValues()">${i18n('Boxes.Investment.Overview.SettingsSave')}</button></p>`);
 
 		$('#InvestmentSettingsBox').html(c.join(''));
 	},
@@ -472,15 +472,64 @@ let Investment = {
 		}
 	},
 
+	HideProgress:()=>{
+		let ws=document.querySelectorAll(".escaping");
+		if (ws) {
+			for(let w of ws){		
+				w.parentNode.removeChild(w);			
+			}
+		}
+	},
+
+
+	ShowProgress:(invest,playerId)=>{
+		let player=MainParser.Players.find(x=>x.PlayerId==playerId && x.GMS);
+		if (!player) {
+			return;
+		}
+		let progress=document.querySelector("#gm-progress");
+		let table='';
+		if (!progress) {
+			let content='<div id="gm-progress"></div>';
+			document.body.insertAdjacentHTML('beforeend',content);
+			progress=document.querySelector("#gm-progress");
+			progress.classList.add("escaping");
+		}
+		
+		let rows='<table>';
+		var i=0;		
+		for(let gm of invest){
+			let gmFound=player.GMS.find(x=>x.BuildingName==gm.name);
+			let increaseTxt="&nbsp;";
+			if (gmFound){
+				if	(gm.level==gmFound.Level) {
+					if (gm.current_progress>gmFound.FPInvests) {
+					//	console.log(gm);
+						increaseTxt="+"+(gm.current_progress-gmFound.FPInvests);
+						gmFound.FPInvests=gm.current_progress;
+						MainParser.updatePlayersRequired++;
+					} 
+				}
+				else if (gm.level>gmFound.Level) {
+					player.GMS.splice(gmFound);
+					MainParser.updatePlayersRequired++;
+				}
+			}
+			rows+='<tr class="gm-row"><td>'+increaseTxt+'</td></tr>';
+			i++;
+			if (i>8) break;
+		}
+		rows+='</rows>';
+		progress.innerHTML=rows;			
+	},
 
 	UpdateData: async (LGData, FullSync) => {
-
+		let arc = 1 + (MainParser.ArkBonus / 100);
 		let allGB = await IndexDB.db.investhistory.where('id').above(0).keys();
 		let UpdatedList = false;
 		let playerSyncGbKeys = null;
-		// both contribution boosts (classic/copper and gold tier) decide the rewards, a change forces a full update
-		let arcLevelCheck = JSON.stringify(JSON.parse(localStorage.getItem('InvestmentArcBonus')));
-		let forceFullUpdate = (arcLevelCheck !== JSON.stringify([MainParser.ArkBonus, MainParser.ArkBonusGold]));
+		let arcLevelCheck = JSON.parse(localStorage.getItem('InvestmentArcBonus'));
+		let forceFullUpdate = !arcLevelCheck || arcLevelCheck != MainParser.ArkBonus ? true : false;
 
 		for (let i in LGData)
 		{
@@ -519,9 +568,6 @@ let Investment = {
 				let GbhasUpdate = false;
 				let arrfphistory = [];
 				let isHidden = 0;
-
-				// gold tier level-ups (overview row `currentTier`) use the gold contribution boost
-				const arc = 1 + (MainParser.GetArkBonus(LGData[i]['currentTier']) / 100);
 
 				if (undefined !== LGData[i]['reward']) {
 					Medals = MainParser.round(LGData[i]['reward']['resources'] !== undefined && LGData[i]['reward']['resources']['medals'] !== undefined ?  LGData[i]['reward']['resources']['medals'] * arc : 0);
@@ -583,13 +629,13 @@ let Investment = {
 				if(CurrentGB !== undefined && (CurrentGB['ishidden'] === undefined || CurrentGB['medals'] === undefined || forceFullUpdate))
 				{
 					GbhasUpdate=true;
-
+					
 					if(!arrfphistory.length)
 					{
 						arrfphistory = JSON.parse(CurrentGB['fphistory']);
 					}
-
-					if(CurrentGB['ishidden'] !== undefined)
+					
+					if(CurrentGB['ishidden'] !== undefined) 
 					{
 						isHidden = CurrentGB['ishidden'];
 					}
@@ -639,11 +685,79 @@ let Investment = {
 
 		// Set Update Date + ArcBonus in local Storage
 		if(FullSync){
-			let InvestmentSettings = JSON.parse(localStorage.getItem('InvestmentSettings') || '{}');
-			InvestmentSettings['lastupdate'] = MainParser.getCurrentDate();
-			localStorage.setItem('InvestmentSettings', JSON.stringify(InvestmentSettings));
-			localStorage.setItem('InvestmentArcBonus', JSON.stringify([MainParser.ArkBonus, MainParser.ArkBonusGold]));
+			let settings = JSON.parse(localStorage.getItem('InvestmentSettings')) || {showEntryDate:false,showRestFp:false,showOnlyDiff:false,showHiddenGb:false,lastupdate:0,removeUnsafeCalc:false};
+			settings.lastupdate = MainParser.getCurrentDate();
+			localStorage.setItem('InvestmentSettings', JSON.stringify(settings));
 		}
+
+	},
+
+	UpdateData: async (LGData, FullSync,plId) => {
+		Investment.LastPlayerGMsView=LGData;
+		if (LGData !== null && LGData.length <= 0) {
+			return;
+		}
+		if (IndexDB.db==null) {
+			return;
+		}
+		if (Investment.LastPlayerGMsView && Investment.LastPlayerGMsView[0]) {
+			//debugger;
+		//let plView=Investment.LastPlayerGMsView[0].player;
+		//let plView=MainParser.Players.find(x=>x.PlayerId==plId);
+		let plView=PlayerDict[plId];
+		if (plView==null) return;
+		for(let gm of LGData){
+			if (gm.name=="L'arche") {
+				plView.Arche={Level:gm.level,PFInvest:gm.current_progress,FPTotal:gm.max_progress,Dt:new Date()}
+				MainParser.updatePlayersRequired++;
+				break;
+			}
+		}
+
+		let plFound=MainParser.Players.find(x=>x.PlayerId==plView.player_id && x.GMS);
+		if (plFound) {			
+
+			for(let gm of Investment.LastPlayerGMsView){
+				let gmFound=plFound.GMS.find(x=>x.BuildingName==gm.name);
+				if (gmFound) {				
+					if (gmFound.Level==gm.level) {
+						if (gmFound.FPInvests<gm.current_progress) {
+							let txt=plFound.PlayerName +" "+gmFound.BuildingName+" +"+(gmFound.FPInvests=gm.current_progress);
+							$.toast(txt);
+						}
+						// mettre à jour
+						gmFound.FPInvests=gm.current_progress;	
+					}
+					else {
+						// supprimer de MainParser.Players
+						plFound.GMS.splice(gmFound);
+					}
+					MainParser.updatePlayersRequired++;
+				}
+			}
+		}
+	}
+
+
+		let arc = 1 + (MainParser.ArkBonus / 100);
+		let allGB = await IndexDB.db.investhistory.where('id').above(0).keys();
+		let UpdatedList = false;
+		let playerSyncGbKeys = null;
+		let playerId=null;
+		if (Investment.State) {
+		 playerId=Investment.State.player_id;
+		}
+		if (playerId==null && LGData.rankings) {
+		  let ownerGM=LGData.rankings.find(x=>x.rank==undefined);
+			if (ownerGM!=null) {
+				playerId=ownerGM.player.player_id;
+			}
+		}
+		if (playerId!=null) {
+			Calculator.ShowGMForPlayer(playerId);
+			return;
+		}	
+		//debugger;		
 	},
 
 
@@ -654,18 +768,6 @@ let Investment = {
 			ishidden: parseInt(state)
 		});
 
-	},
-
-
-	ToggleHidden: () => {
-
-		let value = JSON.parse(localStorage.getItem('InvestmentSettings') || '{}');
-
-		value['showHiddenGb'] = 1 - value['showHiddenGb'];
-
-		localStorage.setItem('InvestmentSettings', JSON.stringify(value));
-
-		Investment.Show();
 	},
 
 
@@ -767,7 +869,7 @@ let Investment = {
 
 		let medalsstart = (startvalues.medalssto !== Medals) ? startvalues.medalssto : 0;
 
-		if($("#total-medals").length !== 0)
+		if($("#total-medals").length !== 0) 
 		{
 			$('.total-medals-reward').easy_number_animate({
 				start_value: medalsstart,

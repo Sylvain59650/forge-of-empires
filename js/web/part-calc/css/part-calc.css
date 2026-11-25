@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -13,7 +13,10 @@
 
 #OwnPartBox {
 	top: 100px;
-	min-width: 250px;
+}
+
+#OwnPartBox.closed .OwnPartBoxBackground {
+	display: none;
 }
 
 #OwnPartBox .OwnPartDrops {
@@ -35,7 +38,7 @@
 	top: -3px;
 }
 
-#OwnPartBox .OwnPartDrops .inputWrapper input, #OwnPartBox .OwnPartDrops div select, #gbCosts input, #PowerLevelingBox input, .OwnPartBoxBackgroundBody input, .OwnPartBoxBackgroundBody select  {
+#OwnPartBox .OwnPartDrops .inputWrapper input, #OwnPartBox .OwnPartDrops div select, #OwnPartBox #OwnPartTable input, #PowerLevelingBox input, .OwnPartBoxBackground input, .OwnPartBoxBackground select  {
 	background-color: var(--background-light);
 	color: var(--text-medium);
 	background-clip: padding-box;
@@ -59,113 +62,47 @@
 	margin-top: 10px;
 }
 
-#gbCosts {
+#OwnPartBox #OwnPartBoxBody {
 	position: relative;
 	margin-left: 0;
 	font-size: 85%;
 }
 
-#OwnPartBox.gbSettingsOpen #gbCosts {
-	filter: brightness(0.3);
-}
-
-#OwnPartBox .fh-icon-settings {
-	margin-right: 1px;
-	display: inline-flex;
-}
-
-#OwnPartBox .icon-close {
-    filter: saturate(0.7) contrast(1.7);
-    opacity: 0.5;
-    background-image: url('../../../../css/images/hud/box-sprite.png'), none;
-    background-position: -2px -2px, 0 0;
-    box-shadow: none;
-	width: 22px;
-	height: 22px;
-	display: inline-block;
-	position: absolute;
-	right: 0;
-	top: 0;
-}
-
-#OwnPartBox.gbSettingsOpen #gbCosts .fh-icon-settings {
-	filter: brightness(1.9) saturate(1.5) contrast(1.1);
-	box-shadow: 0 0 3px var(--black-65), 0 0 10px var(--white), 0 0 15px var(--black-65);
-	border-radius: 3px;
-	scale: 1.1;
-	border: 2px solid var(--white);
-	margin: 2px;
-	left: -4px;
-}
-
-/* temporary information about calculator merge */
-
-#calcInfo {
-	position: relative;
-	background: var(--table-bg-info);
-	border-bottom: 1px solid var(--table-bt-info);
-}
-
-#calcInfo img {
-	height: 20px;
-}
-
-#calcInfo .calcInfo { height: 0; overflow: hidden; width: 240px; margin: 0 auto; }
-#calcInfo:hover .calcInfo { height: auto; }
-
-#gbCosts h1 {
+#OwnPartBox #OwnPartBoxBody h1 {
 	padding: 0;
 }
 
-#gbCosts strong, #gbCosts strong.normal, #up-to-level-up, .recurringquests, #gbCosts .yellow-text {
-	color: var(--sunflower);
+#OwnPartBox #OwnPartBoxBody strong {
+	color: var(--text-bright);
 }
 
-#gbCosts .success, #gbCosts .success strong {
-	color: var(--success) !important;
+#OwnPartBox #OwnPartBoxBody strong.normal {
+	color: var(--text-bright);
 }
 
-#gbCosts .info, #gbCosts .paidFP {
-	color: var(--info-blue) !important;
+#OwnPartBox #OwnPartBoxBody .success {
+	color: var(--text-success) !important;
 }
 
-#gbCosts .error {
-	color: var(--danger-red);
+#OwnPartBox #OwnPartBoxBody .info {
+	color: var(--text-info) !important;
 }
 
-#gbCosts .lb-info {
+#OwnPartBox #OwnPartTable .error {
+	color: #ec4d4d;
+}
+
+#OwnPartBox #OwnPartBoxBody .lb-info {
 	flex-grow: 2;
 }
 
-#gbCosts .lb-status {
-	font-size: 0.85em;
-	color: var(--text-medium);
-	margin-top: 2px;
-}
-
-#gbCosts .lb-status .lb-tier-icon {
-	height: 18px;
-	vertical-align: text-bottom;
-}
-
-#gbCosts .bp-tier-amount {
-	white-space: nowrap;
-}
-
-#gbCosts .bp-tier-icon {
-	height: 16px;
-	vertical-align: text-bottom;
-	margin-left: 1px;
-}
-
-#gbCosts input[type=number], #PowerLevelingBox input {
-	line-height: 1;
+#OwnPartBox #OwnPartTable input, #PowerLevelingBox input {
+	line-height: 1.5;
 	width: 35px;
 	text-align: center;
-	margin: 0 -2px;
 }
 
-#gbCosts #arc-percent {
+#OwnPartBox #arc-percent {
 	background-color: var(--background-light);
 	color: var(--text-medium);
 	background-clip: padding-box;
@@ -175,13 +112,21 @@
 	margin: 0 5px;
 }
 
-#gbCosts .bottom-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+#OwnPartBox .btn-default {
+	padding: 0.2rem 0.4rem;
 }
 
-#gbCosts .bottom-buttons .flex {
+#OwnPartBox .btn-default.btn-tight {
+	padding: 0.2rem;
+}
+
+#OwnPartBox #up-to-level-up {
+	color: var(--text-bright);
+}
+
+#OwnPartBox .bottom-buttons {
+	display: flex;
+	justify-content: space-between;
 	align-items: center;
 }
 
@@ -194,48 +139,50 @@
 	left: 0;
 }
 
-#gbCosts tr th span {
+#OwnPartBox tr th span {
 	display: inline-block;
 	width: 25px;
 	height: 25px;
 	vertical-align: bottom;
 }
 
-#gbCosts tr th span.blueprint {
+#OwnPartBox tr th span.blueprint {
 	background: url(../../x_img/blueprint.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCosts tr th span.medal {
+#OwnPartBox tr th span.medal {
 	background: url(../../x_img/medal.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCosts tr th span.contribution-boost {
+#OwnPartBox tr th span.arc_bonus {
 	background: url(../../x_img/arc_bonus.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCosts tr th span.arc_bonus {
-	background: url(../../x_img/arc_bonus.png) center no-repeat;
-	background-size: contain;
-}
-
-#gbCosts tr th span.forgepoints {
+#OwnPartBox tr th span.forgepoints {
 	background: url(../../x_img/forgepoints.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCosts tr th span.forgepoints_done {
+#OwnPartBox tr th span.forgepoints_done {
 	background: url(../../x_img/forgepoints_done.png) center no-repeat;
 	background-size: contain;
 }
 
-#gbCosts tr td:nth-child(6) {
+#OwnPartBox tr td:nth-child(6) {
 	border-left: 3px solid rgba(0,0,0,0.01);
 }
 
-.OwnPartBoxBackgroundBody .divider {
+.OwnPartBoxBackground {
+	position: absolute;
+	width: 210px;
+	top: 0;
+	left: -6px;
+}
+
+.OwnPartBoxBackground .divider {
 	display: block;
 	height: 0;
 	margin: 10px auto;
@@ -244,92 +191,151 @@
 	border-bottom: 1px solid #9e774e;
 }
 
-.OwnPartBoxBackgroundBody {
+.OwnPartBoxBackground .outerArrow:before {
+	content: "";
+	width: 28px;
+	height: 28px;
+	position: absolute;
+	top: 51px;
+	left: -23px;
+	z-index: -1;
+	background: #895022;
+	border-radius: 3px 0 0 3px;
+}
+
+.OwnPartBoxBackground .outerArrow span.arrow {
+	width: 22px;
+	height: 22px;
+	background-position: -77px -2px, -2px -26px;
+	position: absolute;
+	top: 54px;
+	left: -20px;
+}
+
+.OwnPartBoxBackground .outerArrow span.arrow:hover {
+	background-position: -77px -2px, -28px -26px;
+}
+
+.show .OwnPartBoxBackground .outerArrow span.arrow {
+	background-position: -53px -2px, -2px -26px;
+}
+
+.show .OwnPartBoxBackground .outerArrow span.arrow:hover {
+	background-position: -53px -2px, -28px -26px;
+}
+
+
+.OwnPartBoxBackground .OwnPartBoxBackgroundBody {
 	width: 300px;
+	height: 0;
 	position: absolute;
 	overflow: hidden;
 	overflow-y: auto;
-	top: -5px;
-	left: -5px;
+	top: 0;
+	left: 3px;
 	padding: 0 7px;
 	border-width: 3px;
+	opacity: 0;
 	border-radius: 5px;
-	display: none;
 }
 
-.OwnPartBoxBackgroundBody strong {
-	color: var(--sunflower)
-}
-
-.OwnPartBoxBackgroundBody > div > span:not(.btn) {
+.OwnPartBoxBackgroundBody > div > span:not(.btn-default) {
 	display: inline-block;
 	width: 70px;
 }
 
-.OwnPartBoxBackgroundBody .btn-outer {
+.OwnPartBoxBackground .btn-outer {
 	margin-bottom: 6px;
 }
 
-.OwnPartBoxBackgroundBody input,
-.OwnPartBoxBackgroundBody select {
+.OwnPartBoxBackground input,
+.OwnPartBoxBackground select {
 	font-size: 0.8rem;
 	height: 18px;
 	width: 164px;
 	padding: 2px 5px;
-	text-align: left !important;
 }
 
-.OwnPartBoxBackgroundBody input[id=copystring] {
-	width: 100%;
-	background-color: inherit;
-	color: inherit;
-	border: none;
-	padding: 0;
+.OwnPartBoxBackground input[id=copystring],
+.OwnPartBoxBackground select {
+	font-size: 0.6rem;
+	font-weight: bold;
+	width: 300px;
 }
 
-.OwnPartBoxBackgroundBody .checkboxes {
+.OwnPartBoxBackground select {
+	height: 22px;
+	width: 176px;
+}
+
+.OwnPartBoxBackground .checkboxes {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
 	flex-direction: row;
-	gap: 2px;
 }
 
-.OwnPartBoxBackgroundBody .checkboxes::after {
+.OwnPartBoxBackground .checkboxes::after {
 	content: '';
 	flex: auto;
 }
 
-.OwnPartBoxBackgroundBody input.form-check-input {
+.OwnPartBoxBackground input.form-check-input {
 	position: absolute;
-	top: 0;
-	left: 0;
+	top: 3px;
+	left: 1px;
 	width: auto;
 }
 
-.OwnPartBoxBackgroundBody label.form-check-label {
-	line-height: 1.2rem;
-	width: calc(50% - 1px);
+.OwnPartBoxBackground label.form-check-label {
+	padding: 1px;
+	line-height: 1.4rem;
+	margin: 0 5px 5px 0;
+	width: calc(50% - 5px);
+	background-color: rgba(255,255,255, 0.07);
 	vertical-align: middle;
+	transition: background-color 0.2s linear;
 	position: relative;
-	background: var(--table-bg-odd);
 }
 
-.OwnPartBoxBackgroundBody label.form-check-label span, .OwnPartBoxBackgroundBody label.form-check-label-wide span {
+.OwnPartBoxBackground label.form-check-label:nth-child(2n) {
+	margin-right: 0;
+}
+
+.OwnPartBoxBackground label.form-check-label span {
 	display: inline-block;
 	margin-left: 22px;
 }
 
+.OwnPartBoxBackground label.form-check-label:hover {
+	background-color: rgba(255,255,255, 0.1);
+}
+
+.OwnPartBoxBackground label.form-check-label-wide:nth-child(-n+3) {
+	margin-top: 0;
+}
+
+.OwnPartBoxBackground label.form-check-label-wide:nth-child(3n) {
+	margin-right: 0;
+}
+
+.OwnPartBoxBackground label.form-check-label-wide span {
+	display: inline-block;
+	margin-left: 22px;
+}
+
+.OwnPartBoxBackground label.form-check-label-wide:hover {
+	background-color: rgba(255,255,255, 0.1);
+}
 
 #PowerLevelingBox {
 	top: 30%;
 	left: 100px;
-	width: max-content; /* follows the table, gold levels show seven reward places */
-	max-width: calc(100vw - 40px);
+	max-width: 700px;
 }
 
 #PowerLevelingBox #PowerLevelingBoxBody {
-	overflow-x: auto;
+	overflow-x: hidden;
 	overflow-y: auto;
 	max-height: 500px;
 	user-select: text;
@@ -344,53 +350,18 @@
 }
 
 #PowerLevelingBox #PowerLevelingBoxBody .foe-table td.bright, strong.bright {
-	color: var(--sunflower);
+	color: var(--text-bright);
 	font-weight: bold;
 }
 
 #PowerLevelingBox #PowerLevelingBoxBody .success {
-	color: var(--success);
+	color: var(--text-success);
 }
 
-#PowerLevelingBox input[type=checkbox] {
-	width: auto;
-	margin: 0 3px 0 0;
-	vertical-align: middle;
-}
-
-/* unlock costs: summary of the level range and the cells of the level rows */
-#PowerLevelingBox #PowerLevelingBoxBody .unlock-sum {
-	width: auto;
-	margin: 5px auto 3px;
-}
-
-#PowerLevelingBox #PowerLevelingBoxBody .unlock-sum td:first-child, #PowerLevelingBox #PowerLevelingBoxBody .unlock-sum th:first-child {
-	text-align: left;
-}
-
-#PowerLevelingBox #PowerLevelingBoxBody .unlock-sum td:nth-child(6) {
-	border-right: 0;
-}
-
-/* the unlock costs make the table wide: scroll sideways instead of wrapping the rows */
-#PowerLevelingBox #PowerLevelingBoxTableBody td {
-	white-space: nowrap;
-}
-
-/* the hint wraps to the width of the tables instead of widening the box */
-#PowerLevelingBox .unlock-hint {
-	width: 0;
-	min-width: 100%;
-}
-
-#PowerLevelingBox .unlock-cost {
-	margin: 0 2px;
-}
-
-/* fixed size: the table is not laid out again when the icons have loaded */
-#PowerLevelingBox .unlock-cost img, #PowerLevelingBox .unlock-sum th img {
-	width: 18px;
-	height: 18px;
-	vertical-align: text-bottom;
-	margin-left: 1px;
+#PowerLevelingBox .hidden-text {
+	opacity: 0;
+	display: inline-block;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
 }

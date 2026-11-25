@@ -1,6 +1,6 @@
  /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -23,15 +23,16 @@
 	overflow-y: auto;
 }
 
+
 #SettingsBoxBody h2 {
 	font-size: 110%;
 	font-weight: 700;
-	color: var(--sunflower);
+	color: var(--text-bright);
 	margin: 10px 0 5px;
 }
 
 #SettingsBoxBody .item-row a {
-	color: var(--sunflower);
+	color: #ffcc68;
 }
 
 #SettingsBoxBody .item-row .desc {
@@ -67,11 +68,11 @@
 	text-align: center;
 	line-height: 32px;
 	font-size: 0.9rem;
-	color: var(--light-blue);
+	color: #b0bbcd;
 	font-weight: 700;
 }
 
-#SettingsBoxBody .item-row .btn,
+#SettingsBoxBody .item-row .btn-default,
 #SettingsBoxBody .item-row .setting-dropdown {
 	width: 172px;
 	padding: 4px 0;
@@ -110,7 +111,7 @@
 
 #SettingsBoxBody .settings-wrapper {
 	position: absolute;
-	top: 69px;
+	top: 75px;
 	bottom: 0;
 	left: 0;
 	right: 0;
@@ -131,10 +132,16 @@
 
 #SettingsBoxBody .tabs ul.vertical {
 	position: static;
-	width: 234px;
+	width: 230px;
 	height: auto;
+	padding-top: 5px;
+	margin-bottom: 2px;
 	overflow-y: auto;
 	overflow-x: hidden;
+}
+
+#SettingsBoxBody .tabs ul.vertical li {
+	margin-bottom: 2px;
 }
 
 #SettingsBoxBody .tabs .sub-tab {
@@ -165,21 +172,22 @@
 	border-top: 1px solid var(--border-table-top);
 	border-bottom: 1px solid var(--border-table-bottom);
 	padding: 5px;
-	color: var(--beige);
+	color: var(--text-normal);
 }
 
 #SettingsBoxBody .helplist a:hover {
-	background-color: var(--table-bg-hover);
+	background-color: var(--background-table-hover);
 }
 
 #SettingsBoxBody .helplist li span {
 	display: inline-block;
-	background-color: var(--black);
+	background-color: #000;
 	width: 30px;
 	height: 32px;
 	margin-right: 7px;
 	background: url('../images/help.png') 0 0 no-repeat;
 	text-decoration: none;
+	float: left;
 }
 
 #SettingsBoxBody .helplist .discord {
@@ -197,25 +205,13 @@
 	width: 32px;
 }
 
-#SettingsBoxBody .event-helper-group {
-	margin: 8px 0 16px;
-}
-
-#SettingsBoxBody .event-helper-group > div {
-	margin-top: 4px;
-}
-
-#SettingsBoxBody .event-helper-sub {
-	margin-left: 28px;
-}
-
 #SettingsBoxBody .info-box {
 	border: 1px solid var(--text-dark);
 	padding: 5px;
 }
 
 #SettingsBoxBody .info-box dt {
-	color: var(--sunflower);
+	color: var(--text-bright);
 	font-weight: bold;
 }
 
@@ -223,6 +219,7 @@
 	border: 1px solid var(--text-dark);
 }
 
+/* Menu Inhalt */
 .setting .hud-btn {
 	margin-right: 6px;
 	margin-bottom: 6px;

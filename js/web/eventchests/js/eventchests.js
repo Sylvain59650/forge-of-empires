@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -63,7 +63,7 @@ FoEproxy.addHandler('ChestEventService', 'getOverview', (data, postData) => {
 
 FoEproxy.addHandler('PresentGameService', 'getOverview', (data, postData) => {
 
-	if(!Settings.GetSetting('ShowEventChest') || !(Settings.GetSetting('EventHelperPresent') === undefined ? true : Settings.GetSetting('EventHelperPresent'))) return;
+	if(!Settings.GetSetting('ShowEventChest')) return
     let presents = data.responseData.presentList
 
     let presentData = []
@@ -79,8 +79,7 @@ FoEproxy.addHandler('PresentGameService', 'getOverview', (data, postData) => {
 
 FoEproxy.addHandler('PresentGameService', 'openPresent', (data, postData) => {
 
-	// Presents is only filled by getOverview, which is skipped when the present helper is off
-	if(!Settings.GetSetting('ShowEventChest') || !EventPresents.Presents) return
+	if(!Settings.GetSetting('ShowEventChest')) return
     let presents = data.responseData.updatedPresentList
 
     for (let present of presents) {
@@ -92,8 +91,7 @@ FoEproxy.addHandler('PresentGameService', 'openPresent', (data, postData) => {
 
 FoEproxy.addHandler('PresentGameService', 'useBooster', (data, postData) => {
 
-	// Presents is only filled by getOverview, which is skipped when the present helper is off
-	if(!Settings.GetSetting('ShowEventChest') || !EventPresents.Presents) return
+	if(!Settings.GetSetting('ShowEventChest')) return
     let presents = data.responseData.updatedPresentList
 
     for (let present of presents) {
@@ -129,17 +127,19 @@ let EventPresents = {
     BuildBox: () => {
         let h = [];
 
-        // change when needed!
-        const currencyName1 = 'arthur_event_token_common';
-        const currencyName2 = 'arthur_event_token_rare';
-
         h.push('<table class="foe-table">');
+        h.push('<thead>' +
+            '<tr>' +
+            '<th colspan="3" class="text-center">' + i18n('Boxes.Discord.Name') + '</th>' +
+            '</tr>' +
+            '</thead>');
+
         for (let present of EventPresents.Presents) {
-            let icon, asset;
-            let frag = "";
+            let icon;
+            let frag = ""
 
             if (present.status.value !== "used") {
-                h.push(`<tr class="${present.status.value}">`);
+                h.push('<tr class="'+present.status.value+'">');
 
                 if(present.reward.type === "unit") {
                     asset = present.reward.subType
@@ -149,33 +149,16 @@ let EventPresents = {
                     asset =  present.reward.iconAssetName
                 }
                 if (asset == "icon_fragment") {
-                    if (present.reward.assembledReward.type=="building")
+                    if (present.reward.assembledReward.type=="building") 
                         asset = MainParser.CityEntities[present.reward.assembledReward.subType].asset_id
-                    else
+                    else 
                         asset = present.reward.assembledReward.iconAssetName
                     frag = '<span class="fragment">'+srcLinks.icons("icon_tooltip_fragment")+'</span>';
-                }
+                }  
                 icon = `<img src="${srcLinks.getReward(asset)}" alt="">`;
 
                 h.push('<td class="icon">'+ (icon.search("antiquedealer_flag") === -1 ? icon : '') + frag + '</td>');
-                h.push(`<td>
-                    ${present.reward.name} `);
-
-                    let warning = false;
-
-                    // warning for currency overflow
-                    if (present.reward.subType === (currencyName1) || present.reward.subType === (currencyName2)) {
-                        let currency = present.reward.subType;
-                        let currencyInfo = FHResourcesList.find(x => x.id == currency);
-                        let currencyCapAmount = currencyInfo?.abilities?.resourceCap?.amount || null;
-                        if (currencyCapAmount) {
-                            if (ResourceStock[currency] === (currencyCapAmount-1))
-                                warning = true;
-                        }
-                        h.push(`${(currencyCapAmount ? `&middot; <i ${warning ? ' class="danger"' : ''}>${ResourceStock[currency]}/${currencyCapAmount}</i>` : '')}`);
-                    }
-                    h.push(`${(present.status.value === "visible" ? '<img class="visible" src="' + extUrl + 'css/images/hud/open-eye.png" alt="">' : '')}
-                    </td>`);
+                h.push('<td>' + present.reward.name + (present.status.value === "visible" ? '<img class="visible" src="' + extUrl + 'css/images/hud/open-eye.png" alt="">' : '') +'</td>');
                 h.push('</tr>');
             }
         }
@@ -186,10 +169,16 @@ let EventPresents = {
     }
 }
 
-
+/**
+ *
+ * @type {{Show: EventChests.Show, BuildBox: EventChests.BuildBox, CalcBody: EventChests.CalcBody, Chests: null}}
+ */
 let EventChests = {
     Chests: null,
 
+    /**
+     *
+     */
     Show: () => {
         return;
         if ($('#eventchests').length === 0) {
@@ -208,10 +197,17 @@ let EventChests = {
         EventChests.BuildBox();
     },
 
+    /**
+    *
+    */
     BuildBox: () => {
         EventChests.CalcBody();
     },
 
+
+    /**
+    *
+    */
     CalcBody: () => {
         let h = [];
 

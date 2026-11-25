@@ -1,7 +1,7 @@
 /*
  * *************************************************************************************
  *
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -14,10 +14,6 @@
 
 FoEproxy.addHandler('BoostService', 'getAllBoosts', (data, postData) => {
     Boosts.Add(data.responseData);
-    if (Boosts.first) {
-        Boosts.first = false;
-        Boosts.InitQIAP();
-    }
 });
 FoEproxy.addHandler('BoostService', 'addBoost', (data,postData)=> {
     if (postData[0].requestClass == "CityMapService") return;
@@ -56,16 +52,9 @@ FoEproxy.addHandler('CityMapService', 'getCityMap', (data, postData) => {
 
 
 let Boosts = {
-    first:true,
     ListByType:{},
     CastleSystem:[],
     Ark:0,
-    // raw sums behind `Sums`: additive boosts and the multiplier boosts of the prestige rework
-    // ("multiplies and adds your total attack by X%": effective = floor(additive * (1 + multiplier / 100)))
-    Additive: {},
-    Multipliers: {},
-    // features the general boosts count in as well (quantum incursion has its own boosts only)
-    GeneralFeatures: ['battleground', 'guild_expedition'],
     percent: (x) => {
         return [
             "diplomacy",
@@ -74,7 +63,6 @@ let Boosts = {
             "guild_raids_units_start",
             "guild_raids_supplies_start",
             "guild_raids_coins_start",
-            "guild_raids_action_points_capacity"
         ].includes(x) ? "" : "%"
     },
     Mapper: {
@@ -86,11 +74,6 @@ let Boosts = {
         'att_def_boost_defender': ['att_boost_defender', 'def_boost_defender'],
         'att_def_boost_attacker_defender': ['att_boost_attacker', 'def_boost_attacker', 'att_boost_defender', 'def_boost_defender'],
         'advanced_tactics': ['att_boost_attacker', 'def_boost_attacker', 'att_boost_defender', 'def_boost_defender'],
-        // feature specific great building boosts (e.g. Arc / Himeji / Observatory in GBG, Château / Blue Galaxy / Zeus in GE)
-        'attack_boost': ['att_boost_attacker'],
-        'attacker_defense_boost': ['def_boost_attacker'],
-        'defender_attack_boost': ['att_boost_defender'],
-        'defense_boost': ['def_boost_defender'],
         'money_boost': ['coin_production'],
     },
     Sums: {
@@ -99,7 +82,6 @@ let Boosts = {
         'att_boost_defender': 0,
         'def_boost_defender': 0,
         'goods_production': 0,
-        'special_goods_production': 0,
         'guild_raids-att_boost_attacker': 0,
         'guild_raids-def_boost_attacker': 0,
         'guild_raids-att_boost_defender': 0,
@@ -112,31 +94,27 @@ let Boosts = {
         'battleground-def_boost_attacker': 0,
         'battleground-att_boost_defender': 0,
         'battleground-def_boost_defender': 0,
+        'battleground-def_boost_defender': 0,
         'critical_hit_chance': 0,
         'coin_production': 0,
         'supply_production': 0,
         'forge_points_production':0,
-        'guild_goods_production':0,
         'guild_raids_action_points_collection': 0,
-        'guild_raids_action_points_capacity': 0,
         'guild_raids_coins_production': 0,
         'guild_raids_coins_start': 0,
         'guild_raids_supplies_production': 0,
         'guild_raids_supplies_start': 0,
         'guild_raids_goods_start': 0,
         'guild_raids_units_start': 0,
-        'contribution_boost': 0,
-        'contribution_boost_gold': 0,
     },
-    noSettlement: {
+    noSettlement:{
         'guild_raids_action_points_collection': 0,
-        'guild_raids_action_points_capacity': 0,
         'guild_raids-att_boost_attacker': 0,
         'guild_raids-def_boost_attacker': 0,
         'guild_raids-att_boost_defender': 0,
         'guild_raids-def_boost_defender': 0,
-        'guild_raids_coins_production': 0,
-        'guild_raids_supplies_production': 0
+        
+
     },
     Init:()=>{
         for (let boost of Object.keys(Boosts.Sums)) {
@@ -145,30 +123,17 @@ let Boosts = {
     },
 
     InitLB: async (LBs) => {
-
-        // MainParser.GetGBBonuses supports the classic single `bonus` field and the `bonuses`
-        // array of the prestige rework and completes the targeted feature and the
-        // multiplier flag from the metadata (production bonuses are no boosts)
-        let boosts=LBs.filter(x=>x.player_id == ExtPlayerID).flatMap(x=>
-            MainParser.GetGBBonuses(x)
-                .filter(b=>b?.type && b.bonusCategory?.value !== 'productionBonus')
-                .map(b=>({
-                    entityId: x.entityId||x.id,
-                    origin: "greatBuilding",
-                    type: b.type,
-                    // keep the feature (battleground / guild_expedition), otherwise getFeatureType treats it as general boost
-                    targetedFeature: b.targetedFeature || "all",
-                    value: b.value || 0,
-                    isMultiplier: !!b.isBonusMultiplier
-                }))
+        
+        let boosts=LBs.filter(x=>x.bonus?.type && x.player_id == ExtPlayerID).map(x=>
+            ({
+                entityId: x.entityId||x.id,
+                origin: "greatBuilding",
+                type: x.bonus.type,
+                value: x.bonus.value || 0
+            })
         )
         Boosts.Remove(boosts)
         Boosts.Add(boosts)
-    },
-    InitQIAP: async () => {
-        await ExistenceConfirmed(() => GoodsData.guild_raids_action_points != null);
-        QIActions.capacity  = (GoodsData.guild_raids_action_points?.abilities?.autoRefill?.maxAmount || 200000) - Boosts.Sums['guild_raids_action_points_capacity'];
-
     },
     getFeatureType: (bonus) => {
         let Type = bonus.type;
@@ -188,16 +153,17 @@ let Boosts = {
         if (!AllBoosts || AllBoosts.length==0) return
 
         for (let b of AllBoosts||[]) {
+            
             if (b.type == 'happiness') continue; // => handled in productions.js
             if (b.type == 'life_support') continue; // => handled in productions.js
             if (b.origin == "castle_system") {
                 Boosts.CastleSystem.push(b)
             }
-
+            
             if (b.origin === "inventory_item") {
-                BoostPotions.activate(b.type,{expire:b.expireTime,target:b.targetedFeature||"all",value:b.value})
+                BoostPotions.activate(b.type,{expire:b.expireTime,target:b.targetedFeature||"all",value:b.value})    
                 if (b.expireTime) {
-                    BoostPotions.TimeOut?.add(b)
+                    BoostPotions.TimeOut.add(b)
                 }
             }
 
@@ -206,86 +172,23 @@ let Boosts = {
                     a.type = x
                     return a
                 }) || [structuredClone(b)]
-            for (let m of mapped) {
+            for (let m of mapped) {        
                 m.type = Boosts.getFeatureType(m);
-                // multiplier boosts (prestige rework great buildings, boost entries of the game) are kept apart
-                m.isMultiplier = !!(b.isMultiplier || b.isBonusMultiplier || b.isBoostMultiplier);
                 Boosts.ListByType[m.type]?.push(m);
             }
         }
         Boosts.updateSums();
     },
-
-    /**
-     * Effective total of a boost type like the game: the additive boosts multiplied by the
-     * multiplier boosts ("multiplies and adds your total attack by X%").
-     *
-     * @param {number} additive Sum of the additive boosts
-     * @param {number} multiplier Sum of the multiplier boosts in percent
-     * @returns {number}
-     */
-    effective: (additive, multiplier) => {
-        return (multiplier ? Math.floor(Math.max(0, additive) * (1 + multiplier / 100)) : additive);
-    },
-
-    /**
-     * Additive sum of a boost type, optionally of a targeted feature (battleground, guild_expedition, ...).
-     * Used to rate a multiplier boost by the percent it actually adds on top.
-     *
-     * @param {string} type e.g. 'att_boost_attacker'
-     * @param {string} [feature='all']
-     * @returns {number}
-     */
-    AdditiveSum: (type, feature = 'all') => {
-        const key = Boosts.getFeatureType({ type: type, feature: feature });
-        return (Boosts.Additive[key] || 0) + (Boosts.GeneralFeatures.includes(feature) ? (Boosts.Additive[type] || 0) : 0);
-    },
-
-    /**
-     * Total of a boost type within a feature like the game (BoostModel._getArmyUnitsBoosts):
-     * the general and the feature boosts form one pool, the multipliers of both apply to the
-     * additive sum of both — not each multiplier to its own share.
-     *
-     * @param {string} type e.g. 'att_boost_attacker'
-     * @param {string} [feature='all']
-     * @returns {number}
-     */
-    Total: (type, feature = 'all') => {
-        const key = Boosts.getFeatureType({ type: type, feature: feature });
-        if (!Boosts.GeneralFeatures.includes(feature)) return Boosts.Sums[key] || 0;
-
-        return Boosts.effective(
-            (Boosts.Additive[type] || 0) + (Boosts.Additive[key] || 0),
-            (Boosts.Multipliers[type] || 0) + (Boosts.Multipliers[key] || 0)
-        );
-    },
-
     updateSums: () => {
         for (let boost of Object.keys(Boosts.Sums)) {
-            let additive = 0, multiplier = 0, additiveCity = 0, multiplierCity = 0;
+            let nS = Boosts.noSettlement[boost]
+            Boosts.Sums[boost] = 0;
+            if (nS) Boosts.noSettlement[boost] = 0;
             for (let b of Boosts.ListByType[boost]) {
-                const inCity = (!b.entityId || MainParser.CityMapData[b.entityId]);
-                if (b.isMultiplier) {
-                    multiplier += b.value;
-                    if (inCity) multiplierCity += b.value;
-                }
-                else {
-                    additive += b.value;
-                    if (inCity) additiveCity += b.value;
-                }
+                Boosts.Sums[boost] += b.value
+                if (!b.entityId || MainParser.CityMapData[b.entityId]) Boosts.noSettlement[boost] += b.value;
             }
-            Boosts.Additive[boost] = additive;
-            Boosts.Multipliers[boost] = multiplier;
-            Boosts.Sums[boost] = Boosts.effective(additive, multiplier);
-            Boosts.noSettlement[boost] = Boosts.effective(additiveCity, multiplierCity);
         }
-
-        // contribution boosts of all sources (great buildings, boost service) for the calculators
-        if (typeof MainParser !== 'undefined' && MainParser.updateArkBonus) {
-            MainParser.updateArkBonus(Boosts.Sums['contribution_boost'], 'Boosts');
-            MainParser.updateArkBonus(Boosts.Sums['contribution_boost_gold'], 'Boosts', 'gold');
-        }
-
         FoEproxy.triggerFoeHelperHandler("BoostsUpdated");
     },
     TimeIn: {
@@ -314,17 +217,17 @@ let Boosts = {
                 Boosts.Remove([{entityId:building.id}])
                 let metaData = structuredClone(MainParser.CityEntities[building.cityentity_id])
                 let era = Technologies.getEraName(building.cityentity_id, building.level)
-                let NCE=CityBuildings.createBuilding(metaData, era, building)
+                let NCE=CityMap.createNewCityMapEntity(metaData, era, building)
                 if (!NCE.boosts||NCE.boosts.length==0) continue
                 for (let boost of NCE.boosts||[]) {
                     boost.startTime = building.state.next_state_transition_at
                     boost.entityId = building.id
                     boost.origin = "building"
-                    if (metaData?.components?.AllAge?.limited) {
+                    if (metaData?.components?.AllAge?.limited) {   
                         boost.expireTime = building.state.decaysAt || building.state.next_state_transition_at + metaData.components.AllAge.limited.config.expireTime
                         Boosts.TimeOut.add(boost)
                     }
-                    if (building.state.__class__=="ConstructionState" && (building.state.pausedAt||boost.type=="")) {
+                    if (building.state.__class__=="ConstructionState") {
                         addToList(boost)
                     } else if (!building.state.pausedAt) {
                         if (!Array.isArray(boost.type)) boost.type=[boost.type]
@@ -335,21 +238,21 @@ let Boosts = {
                         }
                     }
                 }
-
+                 
                 if (metaData?.components?.AllAge?.limited) {
                     let target = metaData.components.AllAge.limited.config.targetCityEntityId
                     let metaTarget = structuredClone(MainParser.CityEntities[target])
                     let era = Technologies.getEraName(building.cityentity_id, building.level)
-                    let NCE=CityBuildings.createBuilding(metaTarget, era)
+                    let NCE=CityMap.createNewCityMapEntity(metaTarget, era)
                     for (let boost of NCE.boosts||[]) {
                         boost.startTime = building.state.decaysAt || building.state.next_state_transition_at + metaData.components.AllAge.limited.config.expireTime
                         boost.entityId = building.id
                         boost.origin = "building"
                         addToList(boost)
-                    }
-                }
+                    } 
+                }   
             }
-            Boosts.Add(boostsToAddDirectly)
+            Boosts.Add(boostsToAddDirectly)    
         },
     },
     TimeOut:{
@@ -361,7 +264,7 @@ let Boosts = {
                 Boosts.Timer.next = boost.expireTime
             }
             Boosts.TimeOut.list.push(boost)
-        },
+        },  
     },
     Timer:{
         next:null,
@@ -400,7 +303,7 @@ let Boosts = {
         }
         Boosts.updateSums();
     },
-
+        
 }
 
 Boosts.Init();

@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -24,7 +24,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	color: var(--sunflower);
+	color: var(--text-bright);
 }
 
 #Castle .castle_wrapper .content .warning {
@@ -57,7 +57,7 @@
 
 #Castle #casPointsDiff {
 	padding-left: 5px;
-	color: var(--success);
+	color: var(--text-success);
 }
 
 #Castle #casLogWrapper .overview {
@@ -85,7 +85,7 @@
 }
 
 #Castle #casLogWrapper tr.caption td {
-	color: var(--beige);
+	color: var(--text-normal);
 }
 
 #Castle #casLogWrapper tr.caption td span,

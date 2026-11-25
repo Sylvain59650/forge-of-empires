@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -29,7 +29,7 @@ FoEproxy.addHandler('BoostService', 'addBoost', (data)=> {
 });
 
 /**
- *
+ * 
  */
 let BoostPotions = {
 	delay:null,
@@ -63,7 +63,7 @@ let BoostPotions = {
 			clearInterval(BoostPotions.delay);
 			BoostPotions.delay = null;
 			return;
-		}
+		} 
 		if( $('#BoostPotions').length < 1 ){
 			let div = $('<div />').attr({
 				id: 'BoostPotions',
@@ -72,7 +72,7 @@ let BoostPotions = {
 
 			$('body').append(div);
 		}
-
+		
 		let shortest=`<img src="${srcLinks.get("/shared/icons/reward_icons/reward_icon_boost_attack_medium.png",true)}">`;
 		$('#BoostPotions .shortest').html(shortest);
 		let active=``;
@@ -85,20 +85,19 @@ let BoostPotions = {
 				BoostPotions.active[b]=null;
 				continue;
 			}
-			let [h,m,s]=[duration.hours(),duration.minutes(),duration.seconds()];
-			let all= BoostPotions.active[b].target == undefined || BoostPotions.active[b].target == "all";
-			active += `<span>${all ? "":`<img src="${srcLinks.get(`/shared/icons/booster_target_${BoostPotions.active[b].target}.png`,true)}">`}<img src="${srcLinks.get(`/shared/icons/${b}.png`,true)}">${BoostPotions.active[b].value}% - ${h==0 ? "" : h+":"}${m<10 ? "0"+m:m}:${s<10 ? "0"+s:s}</span>`;
+			[h,m,s]=[duration.hours(),duration.minutes(),duration.seconds()];
+			let all= BoostPotions.active[b].target == undefined || BoostPotions.active[b].target == "all"; 
+			active += `<span>${all ? "":`<img src="${srcLinks.get(`/shared/icons/booster_target_${BoostPotions.active[b].target}.png`,true)}">`}<img src="${srcLinks.get(`/shared/icons/${b}.png`,true)}">${BoostPotions.active[b].value}% - ${h==0 ? "" : h+":"}${m<10 ? "0"+m:m}:${s<10 ? "0"+s:s}</span>`; 
 			a=true;
 			let e=BoostPotions.active[b].expire;
 			if ((d<e && d!=null) || !e) continue;
-			// unknown target features are not relevant for any map
-			if (!BoostPotions.activeMapRelevance[all ? "all" : BoostPotions.active[b].target]?.includes(ActiveMap)) continue;
+			if (!BoostPotions.activeMapRelevance[all ? "all" : BoostPotions.active[b].target].includes(ActiveMap)) continue;
 			d=e;
 			$('#BoostPotions .shortest').html(shortest+`<span><img src="${srcLinks.get(`/shared/icons/${b}.png`,true)}">${h==0 ? "" : h+":"}${m<10 ? "0"+m:m}:${s<10 ? "0"+s:s}</span>`).addClass("boosted");
 		}
 
 		$('#BoostPotions .active').html(active);
-
+		
 		if (!a) {
 			clearInterval(BoostPotions.delay);
 			BoostPotions.delay=null;
@@ -119,7 +118,7 @@ let BoostPotions = {
 			clearInterval(BoostPotions.delay);
 			BoostPotions.delay = null;
 			return;
-		}
+		} 
 		BoostPotions.list = {
 			att_boost_attacker: {},
 			def_boost_attacker: {},
@@ -143,7 +142,7 @@ let BoostPotions = {
 			table += `<tr><td><img src="${srcLinks.get(target=="all"?"/shared/icons/quest_icons/icon_quest_battle.png":`/shared/icons/booster_target_${target}.png`,true)}"></td>`;
 			for (let t of Object.keys(BoostPotions.list)) {
 				table += `<td>`
-				let sorted = (BoostPotions.list[t][target]||[]).sort((a,b)=> {
+				sorted = (BoostPotions.list[t][target]||[]).sort((a,b)=> {
 					let r = a.value-b.value;
 					if (r!=0) return r;
 					return a.duration-b.duration;
@@ -154,17 +153,17 @@ let BoostPotions = {
 				table += `</td><td>`
 				table += sorted.map(b=>{
 					let duration = moment.duration(b.duration*1000);
-					let h=duration.hours(),
-						m=duration.minutes(),
-						s=duration.seconds();
+					h=duration.hours();
+					m=duration.minutes();
+					s=duration.seconds();
 					return `${h==0 ? "" : h+":"}${m<10 ? "0"+m:m}:${s<10 ? "0"+s:s}`;
 				}).join(`\n`);
 				table += `</td>`
 			}
-			table += `</tr>`
+			table += `</tr>`		
 		}
 		table += `</table>`
-
+		
 		if( $('#BoostPotions').length < 1 ){
 			BoostPotions.Show();
 		}

@@ -1,6 +1,6 @@
 /*
  * **************************************************************************************
- * Copyright (C) 2026 FoE-Helper team - All Rights Reserved
+ * Copyright (C) 2024 FoE-Helper team - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the AGPL license.
  *
@@ -51,7 +51,7 @@
     width: 160px;
 }
 
-#Market #MarketBody td.goods-image {
+#Market #MarketBody td.goods-image { 
 	padding: 0;
 	background-color: var(--black-50);
 }
@@ -62,7 +62,7 @@
 	text-align: center;
 }
 
-#Market #MarketBody .sprite-35::before {
+#Market #MarketBody .sprite-35::before { 
 	overflow: hidden;
 	/*position: static;*/
 	display: inline-block;
